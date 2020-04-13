@@ -7,3 +7,4 @@ quotes/servers
 venv/
 
 deprecated.py
+actual_config.json

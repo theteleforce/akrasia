@@ -24,6 +24,8 @@ class Akrasia(discord.Client):
         self.version = "0.1.0"
         self.background_loops = background_loops
         self.bot_log = log
+        self.command_prefix = c.COMMAND_PREFIX # use default unless assigned in config
+        self.database_uri = None
         self.audit_logger = Logger(log, "audit")
         self.status_list = ["with electrons"]
         self.change_status_timer = c.CHANGE_STATUS_TIMER
@@ -54,7 +56,11 @@ class Akrasia(discord.Client):
             c.DEFAULT_RETURN_MESSAGE = "Something went wrong (please contact <@{}> via DMs)".format(c.AUTHOR_ID)
             self.status_list = config["statuses"]
             self.change_status_timer = config["change_status_timer"]
+            self.command_prefix = config["command_prefix"]
             token = config["token"]
+
+            if config["database_uri"]:
+                self.database_uri = config["database_uri"]
 
         if self.background_loops is not None:
             for loop_function in self.background_loops: # insert all of the background loops into the client's event loop
@@ -83,7 +89,7 @@ class Akrasia(discord.Client):
         if message.author == self.user: # avoid feedback loops
             return
 
-        if message.content and message.content[0] == c.COMMAND_PREFIX: # don't get tripped on images/files that have no message.content
+        if len(message.content) > len(self.command_prefix) and message.content[:len(self.command_prefix)] == self.command_prefix: # don't get tripped on images/files that have no message.content
             self.audit_logger.log(message)
             await self.handle_command(message)
 
