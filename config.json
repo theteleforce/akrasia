@@ -1,0 +1,10 @@
+{
+    "home_server": YOUR_HOME_SERVER_ID,
+    "author_id": YOUR_DISCORD_USER_ID,
+    "token": "YOUR_BOT_TOKEN_IN_QUOTES",
+
+    "statuses": [
+        "with electrons"
+    ],
+    "change_status_timer": 300
+}

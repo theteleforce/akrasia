@@ -1,0 +1,1 @@
+Akrasia is a Discord bot framework written with discord.py.

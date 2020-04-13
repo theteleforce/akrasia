@@ -1,0 +1,9 @@
+.idea/
+__pycache__/
+logs/
+databases/
+quotes/resources/avatars
+quotes/servers
+venv/
+
+deprecated.py
