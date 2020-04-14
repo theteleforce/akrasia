@@ -66,5 +66,5 @@ Now all that's left is to test it:
 ![you did it](https://i.imgur.com/0OLnWzY.png)
  
  And that's it! Your instance of Akrasia should be good to go. You can add it to other servers using the same link as before, or take a
- deeper dive and implement your own commands at Intro to modding.
+ deeper dive and implement your own commands at [Intro to modding](https://github.com/CocoPommel/akrasia/blob/master/docs/adding_commands.md).
  
