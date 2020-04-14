@@ -67,6 +67,7 @@ MAGIC_8_BALL_RESPONSES = [
 CHANGE_STATUS_TIMER = 300
 
 DEFAULT_HELP_DICT = {
+			    "help": "honestly? i have no fuckin idea",
                             "echo": "**echo** *[message]*\n"
                             "*echo [channel] [message]*\n"
                             "*Permissions required: bot instance owner*\n"
