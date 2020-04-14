@@ -192,7 +192,7 @@ class Akrasia(discord.Client):
 
         if len(command_args) != 2:
             log.info("Failed to add alias in {} (id: {}); improper syntax".format(message.guild.name, message.guild.id))
-            return "Improper syntax (your message should look like this: !addalias {alias} {normal function}"
+            return "Improper syntax (your message should look like this: !addalias {normal function} {alias}"
         true_function = command_args[0].lower()
         alias = command_args[1].lower()
         true_function_keyword = true_function.split(" ")[0]
@@ -227,21 +227,21 @@ class Akrasia(discord.Client):
         except Exception as e:
             raise Exception("Error adding alias '{} = {}' to server {} (id: {}); error was {}".format(alias, true_function, message.guild.name, message.guild.id, e))
 
-        return "Added alias {}!".format(alias)
+        return "Added alias {} => {}!".format(alias, true_function)
 
     async def delete_alias(self, _, message, command_args, session):
         if not message.author.permissions_in(message.channel).administrator:
             return "You don't have permissions to run that command! (required permissions: administrator)"
 
         if len(command_args) != 1:
-            log.info("Failed to delete alias in {} (id: {}); improper syntax".format(message.guild.name, message.guild.id))
+            log.info("Failed to delete alias in server {} (id: {}); improper syntax".format(message.guild.name, message.guild.id))
             return "Improper syntax (your message should look like this: !deletealias {alias}"
         alias = command_args[0].lower()
 
         try:
             existing_alias = session.query(Alias).filter(db.and_(Alias.server_id == message.guild.id, Alias.alias == alias)).first()
             if existing_alias is None:
-                log.info("Failed to remove alias '{}' in {} (id: {}); no such alias exists in database".format(alias, message.guild.name, message.guild.id))
+                log.info("Failed to remove alias '{}' in server {} (id: {}); no such alias exists in database".format(alias, message.guild.name, message.guild.id))
                 return "No such alias exists! (you can delete it using !deletealias)"
         except Exception as e:
             raise Exception("Couldn't check if alias {} already existed: {}".format(alias, e))
@@ -249,7 +249,7 @@ class Akrasia(discord.Client):
         try:
             session.delete(existing_alias)
         except Exception as e:
-            raise Exception("Error deleting alias '{} = {}' from server {} (id: {}); error was {}".format(alias, existing_alias.true_function, message.guild.name, message.guild.id, e))
+            raise Exception("Error deleting alias '{} => {}' from server {} (id: {}); error was {}".format(alias, existing_alias.true_function, message.guild.name, message.guild.id, e))
 
         return "Deleted alias {}!".format(alias)
 

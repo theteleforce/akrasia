@@ -66,7 +66,7 @@ MAGIC_8_BALL_RESPONSES = [
 
 CHANGE_STATUS_TIMER = 300
 
-DEFAULT_HELP_DICT = {"DEFAULT COMMANDS": {
+DEFAULT_HELP_DICT = {
                             "echo": "**echo** *[message]*\n"
                             "*echo [channel] [message]*\n"
                             "*Permissions required: bot instance owner*\n"
@@ -86,7 +86,7 @@ DEFAULT_HELP_DICT = {"DEFAULT COMMANDS": {
                             "*Permissions required: administrator*\n"
                             "    Lists all aliases on the current server. Be careful about running this if you've got a billion aliases.\n"
                             "    `!aliases`\n"
-}}
+}
 # logging.py
 LOG_SLEEP_TIME = {"audit": 1, "log": 0.5}
 
@@ -120,8 +120,8 @@ IMAGE_WIDTH = 700
 MAX_EMBED_DIMENSIONS = (400, 300)
 MESSAGE_TO_EMBED_SEPERATION = 11
 SUPPORTED_IMAGE_FILETYPES = ["png", "jpg", "jpeg"] # gif?
-MAX_EMBED_FILESIZE = 20 * 10**7 # 20 Mb
-MAX_AVATAR_FILESIZE = 5 * 10**7 # 5 Mb
+MAX_EMBED_FILESIZE = 50 * 10**6 # 50 Mb
+MAX_AVATAR_FILESIZE = 5 * 10**6 # 5 Mb
 SECONDS_FOR_SEPERATED_MESSAGES = 7 * 60 # 7 minutes, as best as I can tell
 MAX_QUOTES_PER_SERVER = 500
 MAX_REVERSE_SEARCH_MESSAGES = 250
