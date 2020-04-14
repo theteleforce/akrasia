@@ -20,8 +20,8 @@ async def add_role(client, message, command_args, session):
         client.bot_log.info("Didn't add role {} to server {} (id: {}) because such a role already existed".format(role_name, message.guild.name, message.guild.id))
         return "A role with that name exists on this server!"
 
-    db_role_already_exists = session.query(Role).filter(db.and_(Role.server_id == message.guild.id, Role.name == role_name)).first()
-    if db_role_already_exists:
+    db_role_already_exists = session.query(Role).filter(db.and_(Role.server_id == message.guild.id, Role.name == role_name.lower())).first()
+    if db_role_already_exists is not None:
         client.bot_log.info("Didn't add role {} to server {} (id: {}) because the role was already in the database".format(role_name, message.guild.name, message.guild.id))
         return "That role is already in the database! (you can delete it from both the server and database using !deleterole)"
 
@@ -32,7 +32,7 @@ async def add_role(client, message, command_args, session):
         return "Couldn't add that role (do I need permissions?)"
 
     server = await get_or_init_server(client, message, session)
-    session.add(Role(id=new_role.id, name=role_name, server=server))
+    session.add(Role(id=new_role.id, name=role_name.lower(), server=server))
     client.bot_log.info("Added role {} (id: {}) to sever {} (id: {})".format(new_role.name, new_role.id, message.guild.name, message.guild.id))
     return "Added role `{}`!".format(role_name)
 
@@ -56,7 +56,7 @@ async def delete_role(client, message, command_args, session):
     role_to_delete = server_roles[0]
 
     db_role_to_delete = session.query(Role).filter(db.and_(Role.server_id == message.guild.id, Role.name == role_name)).first()
-    if db_role_to_delete:
+    if db_role_to_delete is not None:
         session.delete(db_role_to_delete)
         client.bot_log.info("Deleted role {} from database on server {} (id: {})".format(role_name, message.guild.name, message.guild.id))
     else:
@@ -84,7 +84,7 @@ async def unlist_role(client, message, command_args, session):
         return "No role given!"
     role_name = " ".join(command_args).lower()
     db_role_to_delete = session.query(Role).filter(db.and_(Role.server_id == message.guild.id, Role.name == role_name)).first()
-    if db_role_to_delete:
+    if db_role_to_delete is not None:
         session.delete(db_role_to_delete)
         client.bot_log.info("Unlisted role {} (id: {}) from sever {} (id: {})".format(db_role_to_delete.name, db_role_to_delete.id, message.guild.name, message.guild.id))
         return "Role can no longer be joined with !join."
