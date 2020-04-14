@@ -31,10 +31,10 @@ async def add_role(client, message, command_args, session):
         client.bot_log.warning("Failed to add role {} (id: {}) to server {} (id: {}); error was {}".format(server_roles[0].name, server_roles[0].id, message.guild.name, message.guild.id, e))
         return "Couldn't add that role (do I need permissions?)"
 
-    server = get_or_init_server(client, message, session)
-    session.add(Role(id=new_role.id, role_name=role_name, server=server))
+    server = await get_or_init_server(client, message, session)
+    session.add(Role(id=new_role.id, name=role_name, server=server))
     client.bot_log.info("Added role {} (id: {}) to sever {} (id: {})".format(new_role.name, new_role.id, message.guild.name, message.guild.id))
-    return "Added role {}!".format(role_name)
+    return "Added role `{}`!".format(role_name)
 
 
 async def delete_role(client, message, command_args, session):
@@ -60,7 +60,6 @@ async def delete_role(client, message, command_args, session):
         session.delete(db_role_to_delete)
     else:
         client.bot_log.info("Didn't delete role {} from server {} (id: {}) because the role wasn't in the database".format(role_name, message.guild.name, message.guild.id))
-        return "That role wasn't in the database! (you can still delete it manually)"
 
     try:
         await role_to_delete.delete(reason="Deleted via Akrasia by {} (id: {})".format(message.author.name, message.author.id))
@@ -68,10 +67,8 @@ async def delete_role(client, message, command_args, session):
         client.bot_log.warning("Failed to delete role {} (id: {}) from server {} (id: {}); error was {}".format(server_roles[0].name, server_roles[0].id, message.guild.name, message.guild.id, e))
         return "Couldn't remove that role (do I need permissions?)"
 
-
-
     client.bot_log.info("Deleted role {} (id: {}) from sever {} (id: {})".format(role_to_delete.name, role_to_delete.id, message.guild.name, message.guild.id))
-    return "Deleted role {}!".format(role_name)
+    return "Deleted role `{}`!".format(role_name)
 
 
 async def unlist_role(client, message, command_args, session):
@@ -125,7 +122,7 @@ async def leave_role(client, message, command_args, __):
         return "Couldn't remove you from that role (do I need permissions?)"
 
     client.bot_log.info("Removed role {} (id: {}) from user {} (id: {}) in sever {} (id: {})".format(server_roles[0].name, server_roles[0].id, message.author.name, message.author.id, message.guild.name, message.guild.id))
-    return "Removed from role {}.".format(server_roles[0].name)
+    return "Removed from role `{}`.".format(server_roles[0].name)
 
 
 async def join_role(client, message, command_args, session):
@@ -156,7 +153,7 @@ async def join_role(client, message, command_args, session):
         return "Couldn't add you to that role (do I need permissions?)"
 
     client.bot_log.info("Added role {} (id: {}) to user {} (id: {}) in sever {} (id: {})".format(server_roles[0].name, server_roles[0].id, message.author.name, message.author.id, message.guild.name, message.guild.id))
-    return "Added to role {}.".format(server_roles[0].name)
+    return "Added to role `{}`.".format(server_roles[0].name)
 
 
 roles_module = {

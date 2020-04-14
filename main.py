@@ -2,13 +2,16 @@ import os
 
 from akrasia import Akrasia
 from constants import DEFAULT_BACKGROUND_LOOPS, DEFAULT_MODULES, DIRECTORIES
+from custom_modules.dice import dice_module
 
-def ensure_directory():
+def ensure_directories():
     for directory in DIRECTORIES:
         if not os.path.exists(directory):
             os.mkdir(directory)
 
 
 if __name__ == "__main__":
-    bot = Akrasia(modules=DEFAULT_MODULES, background_loops=DEFAULT_BACKGROUND_LOOPS)
+    ensure_directories()
+    custom_modules = [dice_module]
+    bot = Akrasia(modules=DEFAULT_MODULES + custom_modules, background_loops=DEFAULT_BACKGROUND_LOOPS)
     bot.run()
