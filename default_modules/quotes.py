@@ -114,9 +114,8 @@ async def quote(client, message, command_args, session):
     server = await get_or_init_server(client, message, session)
 
     relevant_quotes, error = await __search_quotes(client, message.guild, server, command_args, only_one=True)
-    if error is not None:
-        if error != c.AMBIGUOUS_ERROR: # ambiguity is fine here; we just send one of the ambiguous quotes
-            await message.channel.send(error)
+    if error is not None and error != c.AMBIGUOUS_ERROR: # ambiguity is fine here; we just send one of the ambiguous quotes
+        await message.channel.send(error)
     else:
         await message.channel.send(choice(relevant_quotes).image_url)
 

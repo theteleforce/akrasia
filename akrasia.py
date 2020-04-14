@@ -195,12 +195,12 @@ class Akrasia(discord.Client):
             return "Improper syntax (your message should look like this: !addalias {normal function} {alias}"
         true_function = command_args[0].lower()
         alias = command_args[1].lower()
-        true_function_keyword = true_function.split(" ")[0]
+        true_function_keyword = true_function.split(" ")[0].lower()
 
         true_function_exists = self.command_dict.get(true_function_keyword)
         if true_function_exists is None:
             try: # check if we're aliasing to another alias; if so, map it to the true function of that alias
-                existing_alias = session.query(Alias).filter(db.and_(Alias.server_id == message.guild.id and Alias.alias == true_function)).first()
+                existing_alias = session.query(Alias).filter(db.and_(Alias.server_id == message.guild.id, Alias.alias == true_function)).first()
                 if existing_alias is None:
                     log.info("Failed to add alias '{} = {}' in {} (id: {}); no such true function existed".format(alias, true_function, message.guild.name, message.guild.id))
                     return "The function you're trying to alias to doesn't exist!"
