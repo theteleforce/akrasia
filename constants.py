@@ -8,7 +8,8 @@ from default_modules.statuses import status_loop
 DIRECTORIES = [
     "databases",
     "logs",
-    "quotes/servers"
+    "quotes/servers",
+    "quotes/resources/avatars"
 ]
 
 DEFAULT_MODULES = [
