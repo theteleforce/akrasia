@@ -4,7 +4,7 @@ Akrasia is a framework for writing and self-hosting Discord bots in Python. It i
 
 The bot is designed with self-hosting in mind, and includes simple tools for adding your own commands and interaction with a database (either in memory, on disk, or remote). These short guides can walk you through setting up your own instance and adding custom commands:
 
-  * Getting started
+  * [Getting started](https://github.com/CocoPommel/akrasia/blob/master/docs/getting_started.md)
   * Adding commands
 
 ---
