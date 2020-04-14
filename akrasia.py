@@ -49,7 +49,7 @@ class Akrasia(discord.Client):
                         log.warning("Failed to add modular function {} because a function with that keyword already existed!")
 
     def run(self):
-        with open("actual_config_shhh.json") as f:
+        with open("config.json") as f:
             config = load(f)
             c.HOME_SERVER_ID = config["home_server"]
             c.AUTHOR_ID = config["author_id"]
