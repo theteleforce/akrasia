@@ -4,6 +4,7 @@ from database_utils import Quote, get_or_init_server, get_or_init_user
 from discord import File
 from discord.errors import HTTPException
 from message_utils import send_lines
+from multiprocessing.pool import ThreadPool
 from random import choice
 
 # Asynchronous (Discord) functions
@@ -349,7 +350,7 @@ def parse_quote(messages):
     name_font, timestamp_font, content_font = load_fonts()
     last_user_to_talk = None
     last_message = None
-    images = {}
+    image_objects = []
     image_size = [c.DEFAULT_LEFT_MARGIN + c.PFP_DIAMETER + c.PFP_TO_TEXT_MARGIN, c.BEGINNING_TOP_OFFSET - c.BETWEEN_AUTHORS_MARGIN] # when we set the first last_user_to_talk, this will make the initial vertical offset = c.BEGINNING_TOP_OFFSET
     for message in messages:
         if len(message.attachments) > 2: # hard cap attachments and embeds at 2 so my hard drive doesn't blow up
@@ -364,15 +365,13 @@ def parse_quote(messages):
         else:
             name_plus_timestamp_width = 0 # no need to calculate this again if we adjusted for it in this user's first message
 
-        new_images = [get_image(image) for image in (message.attachments + message.embeds)]
-        images[message.id] = new_images
-        image_sizes = [image.size for image in new_images if image is not None]
-        if message.clean_content is None:
-            content_width = max([image_size[0] for image_size in image_sizes])
-        elif len(image_sizes) == 0:
+        for attachment_or_embed in (message.attachments + message.embeds):
+            image_objects.append(DiscordImage(attachment_or_embed, message.id))
+
+        if len(message.clean_content) > 0:
             content_width = content_font.getsize(message.clean_content)[0]
         else:
-            content_width = max(content_font.getsize(message.clean_content)[0], max([image_size[0] for image_size in image_sizes]))
+            content_width = 0
         message_width = max(name_plus_timestamp_width, content_width)
         if message_width > image_size[0]:
             if message_width > c.MAX_CONTENT_WIDTH:
@@ -383,12 +382,22 @@ def parse_quote(messages):
         if message.clean_content is not None and len(message.clean_content) > 0:
             text_lines = len(wrap_text(message.clean_content, content_font, c.MAX_CONTENT_WIDTH))
             image_size[1] += text_lines * (c.MESSAGE_SIZE + c.BETWEEN_LINES_MARGIN)
-        for one_image_size in image_sizes:
-            image_size[1] += one_image_size[1]
-        image_size[1] += c.BETWEEN_MESSAGES_MARGIN
+        image_size[1] += c.BETWEEN_MESSAGES_MARGIN + c.BETWEEN_LINES_MARGIN + c.TEXT_TO_IMAGE_MARGIN
 
         last_message = message
 
+    image_threadpool = ThreadPool()
+    image_threadpool.map(lambda i: i.fetch_image(), image_objects)
+
+    images = {}
+    for image_object in [i for i in image_objects if i.image is not None]:
+        if image_object.message_id in images:
+            images[image_object.message_id] += [image_object.image]
+        else:
+            images[image_object.message_id] = [image_object.image]
+
+        image_size[0] = max(image_size[0], image_object.image.size[0])
+        image_size[1] += image_object.image.size[1]
     image_size[0] += c.DEFAULT_LEFT_MARGIN + c.PFP_DIAMETER + c.PFP_TO_TEXT_MARGIN + c.DEFAULT_RIGHT_MARGIN # set this afterwards so we can do image_size[0] > c.MAX_CONTENT_WIDTH comparisons earlier
     image_size[1] += 2 * c.DEFAULT_V_MARGIN # add both a top and bottom margin
     return (image_size[0], image_size[1]), images, {"name": name_font, "timestamp": timestamp_font, "content": content_font}
@@ -577,15 +586,44 @@ def circular_crop_avatar(avatar_img):
     return cropped_avatar
 
 
+class DiscordImage:
+    def __init__(self, attachment_or_embed, message_id):
+        self.image = None
+        self.message_id = message_id
+
+        if isinstance(attachment_or_embed, Attachment):
+            if attachment_or_embed.filename.split(".")[-1] in c.SUPPORTED_IMAGE_FILETYPES:
+                self.url = attachment_or_embed.url
+        elif isinstance(attachment_or_embed, Embed):
+            self.url = attachment_or_embed.thumbnail.url
+        else:
+            self.url = None
+
+    def fetch_image(self):
+        headers_response = requests.head(self.url)
+        if int(headers_response.headers.get("content-length", c.MAX_EMBED_FILESIZE + 1)) > c.MAX_EMBED_FILESIZE:
+            self.image = None
+
+        try:
+            img_response = requests.get(self.url)
+        except Exception as e:
+            print("failed to get image from link: {}".format(e))
+            return
+
+        base_img = Image.open(BytesIO(img_response.content)).convert("RGBA")
+        base_img.thumbnail(c.MAX_EMBED_DIMENSIONS, Image.ANTIALIAS)
+        self.image = base_img
+
+
 quote_module = {
-    "addquote": (add_quote, "**addquote** *[message identifier] [# of messages]*\n"
-                            "*addquote [message identifier]*\n"
-                            "*Permissions required: administrator*\n"
-                            "    Adds a message or range of messages as a quote for this server.\n"
-                            "    Quotes can be searched using !quote or !quotes.\n"
-                            "    `!quote 699018254382923846` quotes the message with ID 699018254382923846\n"
-                            "    `!quote 699018254382923846 2` quotes the message with ID 699018254382923846, and the one right after it\n"
-                            "    `!quote body is buried at 2` quotes the last message with \"bodies are buried at\" in it, and the one right after it"),
+    "quote": (add_quote, "**quote** *[message identifier] [# of messages]*\n"
+                         "*quote [message identifier]*\n"
+                         "*Permissions required: administrator*\n"
+                         "    Adds a message or range of messages as a quote for this server.\n"
+                         "    Quotes can be searched using !quote or !quotes.\n"
+                         "    `!quote 699018254382923846` quotes the message with ID 699018254382923846\n"
+                         "    `!quote 699018254382923846 2` quotes the message with ID 699018254382923846, and the one right after it\n"
+                         "    `!quote body is buried at 2` quotes the last message with \"bodies are buried at\" in it, and the one right after it"),
     "deletequote": (delete_quote, "**deletequote** *[message identifier]*\n"
                                   "*deletequote [quote image link]*\n"
                                   "*Permissions required: administrator*\n"
@@ -594,18 +632,18 @@ quote_module = {
                                   "    `!removequote https://cdn.discordapp.com/attachments/698945685357199441/699133124617175070/quote.png` removes the quote stored at that link\n"
                                   "    `!removequote SyIvan body is buried at` removes the quote that has the string \"bodiy are buried at\" and the user SyIvan in it"
                                   "    `!removequote body is buried at` removes the quote with the string \"bodiy are buried at\""),
-    "quote": (quote, "**quote** *[message identifier]*\n"
-                     "*Permissions required: none*\n"
-                     "    Retrieves a random quote from this server that matches the message identifier.\n"
-                     "    `!quote` retrieves a random quote from this server\n"
-                     "    `!quote SyIvan` retrieves a random quote with the user SyIvan from this server\n"
-                     "    `!quote SyIvan body is buried at` retrieves a random quote with the user SyIvan and the string \"body is buried at\" from this server."),
-    "quotes": (quotes, "**quotes** *[message identifier]*\n"
-                       "*Permissions required: none*\n"
-                       "    Retrieves all quote from this server that match the message identifier.\n"
-                       "    `!quotes` retrieves all quotes from this server\n"
-                       "    `!quotes SyIvan` retrieves all quotes with the user SyIvan from this server\n"
-                       "    `!quotes SyIvan body is buried at` retrieves all quotes with the user SyIvan and the string \"body is buried at\" from this server."),
+    "getquote": (quote, "**getquote** *[message identifier]*\n"
+                        "*Permissions required: none*\n"
+                        "    Retrieves a random quote from this server that matches the message identifier.\n"
+                        "    `!getquote` retrieves a random quote from this server\n"
+                        "    `!getquote SyIvan` retrieves a random quote with the user SyIvan from this server\n"
+                        "    `!getquote SyIvan body is buried at` retrieves a random quote with the user SyIvan and the string \"body is buried at\" from this server."),
+    "getquotes": (quotes, "**getquotes** *[message identifier]*\n"
+                          "*Permissions required: none*\n"
+                         "    Retrieves all quote from this server that match the message identifier.\n"
+                         "    `!getquotes` retrieves all quotes from this server\n"
+                         "    `!getquotes SyIvan` retrieves all quotes with the user SyIvan from this server\n"
+                         "    `!getquotes SyIvan body is buried at` retrieves all quotes with the user SyIvan and the string \"body is buried at\" from this server."),
     "testavatar": (test_avatar, "**testavatar** *[avatar link or file]*\n"
                                 "*Permissions required: none*\n"
                                 "    Shows an image of the user saying something with the linked image as their avatar.\n"

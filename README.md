@@ -23,10 +23,10 @@ Stores a recreation of specified messages as a quote.
 ![if you're reading this he's behind you](https://i.imgur.com/60o20Bf.png)
 
 __Commands__:  
-  * `!addquote` to add quotes  
+  * `!quote` to add quotes  
   * `!deletequote` to delete quotes  
-  * `!quote [search term]` to show a random quote with a given term or user  
-  * `!quotes [search term]` to show all quotes with a given term or user  
+  * `!getquote [search term]` to show a random quote with a given term or user  
+  * `!getquotes [search term]` to show all quotes with a given term or user  
 
 ### Reminders
 Tell the bot to remind you of something after a given time period, or on a given day.  
