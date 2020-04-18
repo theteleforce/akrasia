@@ -3,7 +3,7 @@ import sqlalchemy as db
 from database_utils import Quote, get_or_init_server, get_or_init_user
 from discord import File
 from discord.errors import HTTPException
-from message_utils import send_lines
+from message_utils import send_lines, get_time_text
 from multiprocessing.pool import ThreadPool
 from random import choice
 
@@ -302,7 +302,6 @@ async def test_avatar(client, message, __, session):
 
 # Synchronous (client-side) functions
 import datetime as dt
-import pytz
 import requests
 import os
 import constants as c
@@ -346,7 +345,7 @@ def make_quote(messages, _, store_avatar=True):
     return draw_quote(messages, quote_img_size, quote_imgs, fonts, store_avatar)
 
 def parse_quote(messages):
-    now = c.TIMEZONE.localize(dt.datetime.now()) # used for timestamping messages relative to when they're quoted
+    now = dt.datetime.now() # used for timestamping messages relative to when they're quoted
     name_font, timestamp_font, content_font = load_fonts()
     last_user_to_talk = None
     last_message = None
@@ -361,7 +360,7 @@ def parse_quote(messages):
         if message.author != last_user_to_talk or (message.created_at - last_message.created_at).total_seconds() > c.SECONDS_FOR_SEPERATED_MESSAGES:
             last_user_to_talk = message.author
             image_size[1] += c.BETWEEN_AUTHORS_MARGIN + c.AUTHOR_SIZE + c.NAME_TO_MESSAGE_MARGIN # switching authors has the effect of adding another c.BETWEEN_MESSAGES_MARGIN
-            name_plus_timestamp_width = name_font.getsize(message.author.display_name)[0] + timestamp_font.getsize(get_time_text(message, now))[0]
+            name_plus_timestamp_width = name_font.getsize(message.author.display_name)[0] + timestamp_font.getsize(get_time_text(message.created_at, now))[0]
         else:
             name_plus_timestamp_width = 0 # no need to calculate this again if we adjusted for it in this user's first message
 
@@ -407,7 +406,7 @@ def draw_quote(messages, image_size, images, fonts, store_avatar):
     background = Image.new("RGBA", image_size, c.BACKGROUND_COLOR)
     background_draw = ImageDraw.Draw(background)
 
-    now = c.TIMEZONE.localize(dt.datetime.now()) # used for timestamping messages relative to when they're quoted
+    now = dt.datetime.now() # used for timestamping messages relative to when they're quoted
     last_message = None
     last_user_to_talk = None
     vertical_offset = c.BEGINNING_TOP_OFFSET - c.BETWEEN_AUTHORS_MARGIN # when we set the first last_user_to_talk, this will make the initial vertical offset = c.BEGINNING_TOP_OFFSET
@@ -422,7 +421,7 @@ def draw_quote(messages, image_size, images, fonts, store_avatar):
                 background.paste(avatar_img, (c.DEFAULT_LEFT_MARGIN, vertical_offset), avatar_img)
 
             background_draw.text((c.DEFAULT_LEFT_MARGIN + c.PFP_DIAMETER + c.PFP_TO_TEXT_MARGIN, vertical_offset), message.author.display_name, c.AUTHOR_COLOR, fonts["name"])
-            background_draw.text((c.DEFAULT_LEFT_MARGIN + c.PFP_DIAMETER + c.PFP_TO_TEXT_MARGIN + fonts["name"].getsize(message.author.display_name)[0] + c.NAME_TO_TIMESTAMP_MARGIN, vertical_offset + c.TIMESTAMP_TOP_OFFSET), get_time_text(message, now), c.TIMESTAMP_COLOR, fonts["timestamp"])
+            background_draw.text((c.DEFAULT_LEFT_MARGIN + c.PFP_DIAMETER + c.PFP_TO_TEXT_MARGIN + fonts["name"].getsize(message.author.display_name)[0] + c.NAME_TO_TIMESTAMP_MARGIN, vertical_offset + c.TIMESTAMP_TOP_OFFSET), get_time_text(message.created_at, now), c.TIMESTAMP_COLOR, fonts["timestamp"])
             vertical_offset += c.AUTHOR_SIZE + c.NAME_TO_MESSAGE_MARGIN
 
         if message.clean_content is not None and len(message.clean_content) > 0:
@@ -553,28 +552,6 @@ def wrap_word(word, font, max_width):
     lines.append(current_line)
 
     return lines
-
-
-def get_time_text(message, now):
-    message_datetime = pytz.utc.localize(message.created_at).astimezone(c.TIMEZONE)
-    datestring = ""
-    day_offset = int((now - message_datetime).total_seconds() / 86400) # int division with discarding, so 1.1 days => yesterday, 0.9 days => today
-    if day_offset >= 7:
-        return message_datetime.strftime("%m/%d/%Y")
-    if now.weekday() == message_datetime.weekday():
-        if day_offset > 1:
-            datestring += "Last " + c.WEEKDAY_NAMES[message.created_at.weekday()] + " at "
-        else:
-            datestring += "Today at "
-    elif now.weekday() == (message_datetime.weekday() + 1) or (now.weekday() == 0 and message_datetime.weekday() == 6):
-        datestring += "Yesterday at "
-    else:
-        datestring += "Last " + c.WEEKDAY_NAMES[message.created_at.weekday()] + " at "
-
-    timestring = message_datetime.strftime("%I:%M %p")
-    if timestring[0] == "0":
-        timestring = timestring[1:] # 04:30 -> 4:30, since -I is broken on python 3.6
-    return datestring + timestring
 
 
 def circular_crop_avatar(avatar_img):

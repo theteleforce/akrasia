@@ -7,6 +7,7 @@ from datetime import datetime as dt
 from datetime import timedelta as td
 from dateutil.relativedelta import relativedelta
 from message_utils import send_lines
+from default_modules.quotes import get_time_text
 
 # Asynchronous (Discord) stuff
 async def remind_me(client, message, command_args, session):
@@ -150,7 +151,8 @@ async def start_remind_loop(client):
 async def remind_user(client, reminder):
     client.bot_log.info("Attempting to remind user with ID {} with message: {}".format(reminder.user_id, reminder.message))
     try:
-        await client.get_user(reminder.user_id).send(reminder.message)
+        reminder_text = get_time_text(reminder.send_at, dt.now())
+        await client.get_user(reminder.user_id).send("{}\n(in response to your reminder set {}{})".format(reminder.message, reminder_text[0:1].lower(), reminder_text[1:]))
         client.bot_log.info("Successfully reminded user with ID {} with message: {}".format(reminder.user_id, reminder.message))
         return reminder, True
     except Exception as e:
@@ -181,19 +183,19 @@ def parse_time(message_args):
             time_quantity = int(message_args[0])
             if time_quantity < 1:
                 raise ValueError("Sorry, my time machine's still on the fritz.")
-            if time_unit == "seconds":
+            if "second" in time_unit:
                 return now + relativedelta(seconds=int(message_args[0])), 2
-            elif time_unit == "minutes" or time_unit == "minute":
+            elif "minute" in time_unit:
                 return now + relativedelta(minutes=int(message_args[0])), 2
-            elif time_unit == "hours" or time_unit == "hour":
+            elif "hour" in time_unit:
                 return now + relativedelta(hours=int(message_args[0])), 2
-            elif time_unit == "days" or time_unit == "day":
+            elif "day" in time_unit:
                 return now + relativedelta(days=int(message_args[0])), 2
-            elif time_unit == "weeks" or time_unit == "week":
+            elif "week" in time_unit:
                 return now + relativedelta(weeks=int(message_args[0])), 2
-            elif time_unit == "months" or time_unit == "month":
+            elif "month" in time_unit:
                 return now + relativedelta(months=int(message_args[0])), 2
-            elif time_unit == "years" or time_unit == "year":
+            elif "year" in time_unit:
                 return now + relativedelta(years=int(message_args[0])), 2
             raise ValueError("Invalid time type passed: {}".format(time_unit))
 

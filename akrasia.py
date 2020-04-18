@@ -264,17 +264,7 @@ class Akrasia(discord.Client):
             return "No aliases found!"
 
         await message.channel.send("{} aliases:\n".format(len(server_aliases)))
-        send_string = ""
-        for alias in server_aliases:
-            alias_string = "{} => {} ".format(alias.alias, alias.true_function)
-
-            if len(send_string) + len(alias_string) > c.MAX_CHARS_PER_MESSAGE:
-                await message.channel.send(send_string)
-                send_string = alias_string
-            else:
-                send_string += alias_string + "\n"
-        await message.channel.send(send_string)
-        await sleep(c.SEND_CYCLE_WAIT_TIME)
+        await send_lines(message.channel, ["{} => {} ".format(alias.alias, alias.true_function) for alias in server_aliases])
 
     async def help(self, _, message, command_args, session):
         if len(command_args) == 0:
