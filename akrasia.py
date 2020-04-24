@@ -4,7 +4,7 @@ import logging
 import os
 import sqlalchemy as db
 
-from asyncio import ensure_future, get_event_loop, sleep
+from asyncio import ensure_future, get_event_loop
 from database_utils import Alias, init_databases, get_or_init_server
 from json import load
 from logger import Logger
@@ -193,9 +193,11 @@ class Akrasia(discord.Client):
         if len(command_args) != 2:
             log.info("Failed to add alias in {} (id: {}); improper syntax".format(message.guild.name, message.guild.id))
             return "Improper syntax (your message should look like this: !addalias {normal function} {alias}"
-        true_function = command_args[0].lower()
         alias = command_args[1].lower()
-        true_function_keyword = true_function.split(" ")[0].lower()
+        alias = alias[len(c.COMMAND_PREFIX):] if len(alias) > len(c.COMMAND_PREFIX) and alias[:len(c.COMMAND_PREFIX)] == c.COMMAND_PREFIX else alias
+        true_function_keyword = command_args[0].split(" ")[0].lower()
+        true_function_keyword = true_function_keyword[len(c.COMMAND_PREFIX):] if len(true_function_keyword) > len(c.COMMAND_PREFIX) and true_function_keyword[:len(c.COMMAND_PREFIX)] == c.COMMAND_PREFIX else true_function_keyword
+        true_function = true_function_keyword + " " + " ".join(command_args[0].split(" ")[1:]) if len(command_args[0].split(" ")) > 1 else true_function_keyword
 
         true_function_exists = self.command_dict.get(true_function_keyword)
         if true_function_exists is None:
@@ -235,14 +237,15 @@ class Akrasia(discord.Client):
 
         if len(command_args) != 1:
             log.info("Failed to delete alias in server {} (id: {}); improper syntax".format(message.guild.name, message.guild.id))
-            return "Improper syntax (your message should look like this: !deletealias {alias}"
+            return "Improper syntax (your message should look like this: !deletealias {alias})"
         alias = command_args[0].lower()
+        alias = alias[len(c.COMMAND_PREFIX):] if len(alias) > len(c.COMMAND_PREFIX) and alias[:len(c.COMMAND_PREFIX)] == c.COMMAND_PREFIX else alias
 
         try:
             existing_alias = session.query(Alias).filter(db.and_(Alias.server_id == message.guild.id, Alias.alias == alias)).first()
             if existing_alias is None:
                 log.info("Failed to remove alias '{}' in server {} (id: {}); no such alias exists in database".format(alias, message.guild.name, message.guild.id))
-                return "No such alias exists! (you can delete it using !deletealias)"
+                return "No such alias exists!"
         except Exception as e:
             raise Exception("Couldn't check if alias {} already existed: {}".format(alias, e))
 
