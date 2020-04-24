@@ -387,6 +387,7 @@ def parse_quote(messages):
 
     image_threadpool = ThreadPool()
     image_threadpool.map(lambda i: i.fetch_image(), image_objects)
+    image_threadpool.join()
 
     images = {}
     for image_object in [i for i in image_objects if i.image is not None]:
