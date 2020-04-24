@@ -141,7 +141,7 @@ class Akrasia(discord.Client):
         current_arg = []
         in_quotes = False
         for word in command_content[1:]:
-            if word[0] == '"':
+            if word[0] == '"' and len(word) > 2:
                 word = word[1:]
                 in_quotes = True
             if word[-1] == '"':

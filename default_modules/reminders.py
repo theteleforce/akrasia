@@ -183,19 +183,19 @@ def parse_time(message_args):
             time_quantity = int(message_args[0])
             if time_quantity < 1:
                 raise ValueError("Sorry, my time machine's still on the fritz.")
-            if "second" in time_unit:
+            if time_unit in c.SECONDS_ALIAS:
                 return now + relativedelta(seconds=int(message_args[0])), 2
-            elif "minute" in time_unit:
+            elif time_unit in c.MINUTES_ALIAS:
                 return now + relativedelta(minutes=int(message_args[0])), 2
-            elif "hour" in time_unit:
+            elif time_unit in c.HOURS_ALIAS:
                 return now + relativedelta(hours=int(message_args[0])), 2
-            elif "day" in time_unit:
+            elif time_unit in c.DAYS_ALIAS:
                 return now + relativedelta(days=int(message_args[0])), 2
-            elif "week" in time_unit:
+            elif time_unit in c.WEEKS_ALIAS:
                 return now + relativedelta(weeks=int(message_args[0])), 2
-            elif "month" in time_unit:
+            elif time_unit in c.MONTHS_ALIAS:
                 return now + relativedelta(months=int(message_args[0])), 2
-            elif "year" in time_unit:
+            elif time_unit in c.YEARS_ALIAS:
                 return now + relativedelta(years=int(message_args[0])), 2
             raise ValueError("Invalid time type passed: {}".format(time_unit))
 

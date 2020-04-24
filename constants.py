@@ -138,3 +138,12 @@ AVATAR_TEST_MESSAGES = [
 ]
 
 MAX_CONTENT_WIDTH = IMAGE_WIDTH - DEFAULT_LEFT_MARGIN - PFP_DIAMETER - PFP_TO_TEXT_MARGIN - DEFAULT_RIGHT_MARGIN # personal choice
+
+# reminders.py
+SECONDS_ALIAS = ["second", "sec", "secs", "seconds"]
+MINUTES_ALIAS = ["minute", "minutes", "min", "mins"]
+HOURS_ALIAS = ["hour", "hours", "hr", "hrs"]
+DAYS_ALIAS = ["day", "days"]
+WEEKS_ALIAS = ["week", "weeks", "wk", "wks"]
+MONTHS_ALIAS = ["month", "months", "mon", "mons"]
+YEARS_ALIAS = ["year", "years", "yr", "yrs"]
