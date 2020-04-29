@@ -20,11 +20,11 @@ Let's break this down into parts:
   * The four arguments must also be present in any function called directly by a command.
     * `client` holds the `discord.Client` object for your bot. This allows you to do things like update your status, get users by ID, and other Discord API things.
     * `message` has the `discord.Message` object that triggered this command. Most commonly used to get the `message.author`, `message.guild`, and `message.channel`.
-    * `command_args` contains the arguments passed by the user; for example, `!roll a b c` gives `["a", "b", "c"], while `!roll "a b" c` gives ["a b", "c"]
+    * `command_args` contains the arguments passed by the user; for example, `!roll a b c` gives `["a", "b", "c"]`, while `!roll "a b" c` gives `["a b", "c"]`
     * `session` is the SQL session created for this request. It is automatically committed when your function returns and rolls back on error, so you don't need to worry about closing or handling every error.
   * The return message is what your bot will respond to the user with. Every command must return *something*, even if it's just confirmation that it run successfully, because otherwise one million (1,000,000) people will DM you asking why your bot is down.
   
-In most commands, you won't use all of these arguments. That's no problem! Just remember, they have to *be* there, or the bot can't call your function.
+In most commands, you won't use all of these arguments. That's fine! Just remember, they have to *be* there, or the bot can't call your function.
 
 Now your command exists. However, Akrasia doesn't *know* it exists. To fix this, we need to add it to a *module*.
 
@@ -63,7 +63,7 @@ We did it! Now...
 Let's improve this command some. Specifically, let's make it so you can roll any number of any-sided dice (2d6, 5d4), in case you've got any huge nerds on your server.
 
 The input would look something like this:  
-`!roll 5d4` 
+`!roll 5d4`  
 Meaning our code should look something like this (feel free to implement this yourself, if you want):
 ```
 from random import randint
@@ -78,11 +78,11 @@ async def roll(client, message, command_args, session):
     return str(total_roll)
 ```
 
-Implementing and running this, we can see it works as expected:  
+Writing and running this, we can see it works as expected:  
 
 ![four AM btw](https://i.imgur.com/LoZEnjA.png)
 
-But wait. What if a clueless new user comes in and does this?
+But wait. What if a clueless new user comes in and does this?  
 ![fuck you joe gonzalez](https://i.imgur.com/7yJ4HkR.png)
 
 Or some incredible bastard does this?
@@ -91,10 +91,10 @@ Or some incredible bastard does this?
 Clearly, we need to validate our input.
 
 ## Check your user input (or you'll get pinged a lot)
-As a rule, everyone on the internet is the kind of person who parks in disabled parking spaces while driving a stolen SUV with a Holacaust denial spray-painted on it.
-To counter this, you should be very sure to *check everything in command_args before you use it*.
+As a rule, everyone on the internet is the kind of person who double-parks their stolen Ferarri with a Holacaust denial bumper sticker in the disabled spaces.
+To deal with this, you should be very sure to *check everything in command_args before you use it*.
 
-Here, there's serveral possible errors:
+Here, there's serveral possible exploits or errors we can handle:
   * No arguments were submitted (in this case, command_args[0] throws an exception)
   * There wasn't a `d` in the string, or more than one `d`, or a `d` was at the end...
   * One of the numbers wasn't actually a number (`!roll 2dsix`)
@@ -156,5 +156,5 @@ That's about it.[2] At some point I'll make a second tutorial about how to use t
 
 Happy modding!
 
-[1] Don't make your help message an empty string.
+[1] Don't make your help message an empty string.  
 [2] You may need some extra libraries, depending on what you want to do. The main one is PyNaCl, which you'll need if you want to implement any voice channel-related functions.
