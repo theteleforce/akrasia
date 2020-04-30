@@ -10,6 +10,7 @@ from json import load
 from logger import Logger
 from message_utils import send_lines
 from random import choice
+from re import match
 from sqlalchemy.orm import sessionmaker
 
 
@@ -96,7 +97,7 @@ class Akrasia(discord.Client):
         clean_content = message.clean_content.lower() if message.clean_content is not None else None
         if clean_content:
             for hook in c.TEXT_HOOKS:
-                if hook in message.clean_content.lower():
+                if match(hook, message.clean_content.lower()):
                     await self.respond_to_hook(message, hook)
                     return # don't let the bot spam if someone sends a message with 60 triggers
 
