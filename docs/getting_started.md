@@ -30,7 +30,7 @@ your Akrasia instance to let it operate on that account.
 Once the bot account is set up, we'll need to install the code on whatever device you want to run the bot on. Note that *the bot will always be running in the background on this device.*
 It's not CPU-intensive, but it is something to consider; if your internet goes out or you shut down the device, you'll have to restart the bot when that device reboots.
 
-You'll need [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) and [Python 3](https://realpython.com/installing-python/#windows) installed for this. If you're installign on Linux or Mac, you should have them already.
+You'll need [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) and [Python 3](https://realpython.com/installing-python/#windows) installed for this. If you're installing on Linux or Mac, you should have them already.
 
 Once you have those, getting the code is very easy:
 
