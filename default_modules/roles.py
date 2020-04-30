@@ -150,6 +150,33 @@ async def join_role(client, message, command_args, session):
     return "Added to role `{}`.".format(server_roles[0].name)
 
 
+async def list_role(client, message, command_args, session):
+    if message.guild is None:
+        return "Can't call listrole in a DM!"
+
+    if command_args is None:
+        return "No role given!"
+    role_name = " ".join(command_args).lower()
+
+    server_roles = [role for role in message.guild.roles if role.name.lower() == role_name]
+    if len(server_roles) == 0:
+        return "No such role exists on this server!"
+    role = server_roles[0]
+
+    role_in_server = session.query(Role).filter(db.and_(Role.server_id == message.guild.id, Role.name == role_name)).first()
+    if role_in_server is None:
+        client.bot_log.error("Failed to list role {} (id: {}) in server {} (id: {}); role was not bot-addable.".format(server_roles[0].name, server_roles[0].id, message.author.name, message.author.id, message.guild.name, message.guild.id))
+        return "That role is not !join-able, and thus cannot be listed."
+
+    members_list = [member.display_name for member in role.members]
+    if len(members_list) == 0:
+        return "That role is empty!"
+    members_list.sort()
+
+    client.bot_log.info("Listing members of role {} to user {} (id: {}) in server {} (id: {})".format(role.name, message.author.name, message.author.id, message.guild.name, message.guild.id))
+    return "Members of {}:\n{}".format(role.name, ", ".join(members_list))
+
+
 roles_module = {
     "addrole": (add_role, "**addrole** *[role name]*\n"
                           "*Permissions needed: manage roles*\n"
@@ -170,5 +197,9 @@ roles_module = {
     "leave": (leave_role, "**leave** *[role name]*\n"
                           "*Permissions needed: none*\n"
                           "    Leaves the given role.\n"
-                          "    `!leave goon platoon` leaves the role \"goon platoon\"")
+                          "    `!leave goon platoon` leaves the role \"goon platoon\""),
+    "listrole": (list_role, "**listrole** *[role name]*\n"
+                            "*Permissions needed: none*\n"
+                            "    Lists all users with a given role, if that role is !join-able.\n"
+                            "    `!list goon platoon` lists all players with the role \"goon platoon\"")
 }
