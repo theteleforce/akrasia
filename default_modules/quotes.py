@@ -143,8 +143,7 @@ async def delete_quote(client, message, command_args, session):
     relevant_quotes, error = await __search_quotes(client, message.guild, server, command_args, only_one=True)
     if error is not None:
         if error == c.AMBIGUOUS_ERROR:
-            await message.channel.send("Ambiguous text search term. Found {} results:".format(len(relevant_quotes)))
-            await __list_quotes(message.channel, relevant_quotes)
+            return "\n".join(["Ambiguous text search term. Found {} results:".format(len(relevant_quotes))] + [rquote.image_url for rquote in relevant_quotes])
         else:
             await message.channel.send(error)
     else:
@@ -166,8 +165,8 @@ async def get_quotes(client, message, command_args, session):
     if error is not None:
         await message.channel.send(error)
     else:
-        await __list_quotes(message.channel, relevant_quotes)
         server.last_quotes_time = dt.datetime.now()
+        return "\n".join([rquote.image_url for rquote in relevant_quotes])
 
 
 async def __search_quotes(client, guild, server, command_args, only_one=False):
@@ -261,11 +260,6 @@ async def __search_quotes(client, guild, server, command_args, only_one=False):
                 user_search_string, text_search_string, server.name, server.id))
         return None, "No quotes found matching the parameters (user: {}, text: {}) or (text: {}). Try using some broader search terms!\n\n(note: if you specified a user, we couldn't find them on this server either)".format(
             user_search_string, old_text_search_string, text_search_string)
-
-
-async def __list_quotes(channel, quotes_list):
-    quote_strings = [rquote.image_url for rquote in quotes_list]
-    await send_lines(channel, quote_strings)
 
 async def test_avatar(client, message, __, session):
     avatar_url = None

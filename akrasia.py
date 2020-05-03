@@ -152,7 +152,11 @@ class Akrasia(discord.Client):
 
             command_reply = await command_function(self, message, command_args, session)
             if command_reply:
-                await message.channel.send(command_reply)
+                if len(command_reply) > 2000: # send replies that would have had to be split into multiple messages in DMs
+                    await message.channel.send("Check your DMs!")
+                    await send_lines(message.author, command_reply.split("\n"))
+                else:
+                    await message.channel.send(command_reply)
         except Exception as e:
             if "unknown command recieved" in str(e):
                 self.bot_log.info("{}".format(e))
@@ -337,8 +341,7 @@ class Akrasia(discord.Client):
         if len(server_aliases) == 0 or server_aliases is None:
             return "No aliases found!"
 
-        await message.channel.send("{} aliases:\n".format(len(server_aliases)))
-        await send_lines(message.channel, ["{} => {} ".format(alias.alias, alias.true_function) for alias in server_aliases])
+        return "{} aliases:\n".format(len(server_aliases)) + "\n".join(["{} => {} ".format(alias.alias, alias.true_function) for alias in server_aliases])
 
     async def set_server(self, _, message, command_args, session):
         if len(command_args) == 0: # no args defaults to current server, or resets the home server if called from DMs
@@ -375,11 +378,7 @@ class Akrasia(discord.Client):
             self.bot_log.info("Couldn't set main server of {} (id: {}) based on query {}: too many results found ({}).".format(message.author.name, message.author.id, server_name_or_id, len(servers_matching_search)))
             return_string_lines.append("Try being more specific, or using one of the IDs given above.")
 
-            if message.guild is None:
-                await send_lines(message.author, return_string_lines)
-            else:
-                await send_lines(message.channel, return_string_lines)
-            return None
+            return "\n".join(return_string_lines)
         elif len(servers_matching_search) == 0:
             self.bot_log.info("Couldn't set main server of {} (id: {}) based on query {}: no results found.".format(message.author.name, message.author.id, server_name_or_id))
             return "No servers found matching that search term!"
@@ -437,9 +436,8 @@ class Akrasia(discord.Client):
         for entry in reversed(log_entries): # show the five most recent log entries in chronological order, as opposed to in order of recency
             return_lines.append(entry.message_content)
 
-        await send_lines(message.channel, return_lines, code_mode=True)
         self.bot_log.info("sent audit log to user {} (id: {}) based on (num_entries: {}, search_term: {})".format(message.author.name, message.author.id, num_entries, search_term))
-        return None
+        return "\n".join(return_lines)
 
 
     async def help(self, _, message, command_args, session):
