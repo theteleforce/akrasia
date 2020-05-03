@@ -133,6 +133,11 @@ class Akrasia(discord.Client):
                 relevant_user.last_command_time = message.created_at
                 session.commit() # commit here so people can't spam invalid commands and abuse the except: rollback
 
+            if message.guild is None: # if in a DM, set the server to the user's home server, if they have one
+                if relevant_user.main_server is not None: # set the guild of the message to the user's main guild
+                    home_guild = self.get_guild(relevant_user.main_server_id)
+                    message = MessageWrapper(message, home_guild, home_guild.get_member(message.author.id)) # WARNING: if something you're doing is horribly and subtly broken, this is probably why
+
             if command_function is None: # if it's not a hardcoded command, check to see if it's an alias
                 aliased_command = session.query(Alias).filter(db.and_(Alias.server_id == message.guild.id, Alias.alias == command_keyword)).first()
                 if aliased_command is None:
@@ -142,11 +147,6 @@ class Akrasia(discord.Client):
                     command_function = self.command_dict.get(aliased_function_parts[0])
                     if len(aliased_function_parts) > 1:
                         command_args = aliased_function_parts[1:] + command_args
-
-            if message.guild is None: # if in a DM, set the server to the user's home server, if they have one
-                if relevant_user.main_server is not None: # set the guild of the message to the user's main guild
-                    home_guild = self.get_guild(relevant_user.main_server_id)
-                    message = MessageWrapper(message, home_guild, home_guild.get_member(message.author.id)) # WARNING: if something you're doing is horribly and subtly broken, this is probably why
 
             self.audit_logger.log(self, message, session) # must audit log *after* setting the server to the home server
 
