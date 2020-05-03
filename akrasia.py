@@ -341,11 +341,16 @@ class Akrasia(discord.Client):
         await send_lines(message.channel, ["{} => {} ".format(alias.alias, alias.true_function) for alias in server_aliases])
 
     async def set_server(self, _, message, command_args, session):
-        if len(command_args) == 0: # no args means that this user wants their home server reset
+        if len(command_args) == 0: # no args defaults to current server, or resets the home server if called from DMs
             user = get_or_init_user(self, message, session)
-            user.main_server = None
-            self.bot_log.info("Reset main server of {} (id: {})".format(message.author.name, message.author.id))
-            return "Cleared your home server!"
+            if message.guild is None:
+                user.main_server = None
+                self.bot_log.info("Reset main server of {} (id: {})".format(message.author.name, message.author.id))
+                return "Cleared your home server!"
+            else:
+                user.main_server = get_or_init_server(self, message.guild, session)
+                self.bot_log.info("Set main server of {} (id: {}) to {} (id: {})".format(message.author.name, message.author.id, message.guild.name, message.guild.id))
+                return "Set home server to {}!".format(message.guild.name)
 
         server_name_or_id = " ".join(command_args)
 

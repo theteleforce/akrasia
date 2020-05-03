@@ -105,7 +105,8 @@ DEFAULT_HELP_DICT = {
                             "*Permissions required: none*\n"
                             "    Sets a given server as a user's home server.\n"
                             "    Future commands in DMs with this user will be run as if they were on the home server.\n"
-                            "    (call without a server name or ID to remove your home server)\n"
+                            "    (call without a server name sets your home to the current server)\n"
+                            "    (call without a server name in DMs will reset your home server)\n"
                             "    `!setserver Goon Platoon`"
 
 
