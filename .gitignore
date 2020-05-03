@@ -1,6 +1,7 @@
 .idea/
 __pycache__/
 logs/
+custom_modules/
 databases/
 quotes/resources/avatars
 quotes/servers
@@ -8,3 +9,4 @@ venv/
 
 deprecated.py
 actual_config_shhh.json
+config.json

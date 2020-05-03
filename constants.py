@@ -7,7 +7,7 @@ from default_modules.statuses import status_loop
 # main.py
 DIRECTORIES = [
     "databases",
-    "logs",
+    # "logs",
     "quotes/servers",
     "quotes/resources/avatars"
 ]
@@ -25,6 +25,8 @@ DEFAULT_BACKGROUND_LOOPS = [
 
 # akrasia.py
 COMMAND_PREFIX = "!"
+DEFAULT_COMMAND_COOLDOWN = 1
+DEFAULT_HOOK_COOLDOWN = 1
 DATABASE_DIR = "databases"
 DEFAULT_RETURN_MESSAGE = None
 LOG_DATETIME_FORMAT = "%Y/%M/%d %H:%M:%S"
@@ -45,6 +47,9 @@ SEND_CYCLE_WAIT_TIME = 0.5
 AMBIGUOUS_ERROR = -1
 QUOTES_COOLDOWN = 2
 AVATAR_TEST_COOLDOWN = 5
+GUILD_REQUIRED_MESSAGE = "Can't call `{}{}` in a DM (unless you set your home server using `{}setserver`)"
+DEFAULT_AUDIT_LOG_ENTRIES = 5
+MAX_AUDIT_LOG_ENTRIES = 100
 
 MAGIC_8_BALL_RESPONSES = [
     "Without a doubt.",
@@ -67,7 +72,7 @@ MAGIC_8_BALL_RESPONSES = [
 CHANGE_STATUS_TIMER = 300
 
 DEFAULT_HELP_DICT = {
-			    "help": "honestly? i have no fuckin idea",
+                            "help": "honestly? i have no fuckin idea",
                             "echo": "**echo** *[message]*\n"
                             "*echo [channel] [message]*\n"
                             "*Permissions required: bot instance owner*\n"
@@ -86,13 +91,30 @@ DEFAULT_HELP_DICT = {
                             "aliases": "**aliases**\n"
                             "*Permissions required: administrator*\n"
                             "    Lists all aliases on the current server. Be careful about running this if you've got a billion aliases.\n"
-                            "    `!aliases`\n"
+                            "    `!aliases`\n",
+                            "auditlog": "**auditlog** *[search term] [number of results to find]*\n"
+                            "*auditlog [number of results to find]*\n"
+                            "*auditlog [search term]*\n"
+                            "*Permissions required: administrator*\n"
+                            "    Displays the most recent *n* commands run on this server that match a given search term\n"
+                            "    Search term can be any of (username, user ID, part of message)\n"
+                            "    `!auditlog addalias 10`\n"
+                            "    `!auditlog Crowfeather`",
+                            "setserver": "**setserver** *[home server ID]*\n"
+                            "*setserver [home server name]*\n"
+                            "*Permissions required: none*\n"
+                            "    Sets a given server as a user's home server.\n"
+                            "    Future commands in DMs with this user will be run as if they were on the home server.\n"
+                            "    (call without a server name or ID to remove your home server)\n"
+                            "    `!setserver Goon Platoon`"
+
+
+
 }
 # logging.py
 LOG_SLEEP_TIME = {"audit": 1, "log": 0.5}
 
 # quotes.py
-BEGINNING_TOP_OFFSET = 8 # personal choice
 DEFAULT_V_MARGIN = 8 # 2 for the actual margin, 3 for the 3 pixels of space above the text, 3 for the 3 pixels of space below the previous text
 DEFAULT_LEFT_MARGIN = 16
 DEFAULT_RIGHT_MARGIN = 30 # personal choice

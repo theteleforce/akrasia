@@ -8,5 +8,7 @@
     "statuses": [
         "with electrons"
     ],
-    "change_status_timer": 300
+    "change_status_timer": 300,
+    "per_user_command_cooldown": 1,
+    "per_user_hook_cooldown": 1
 }

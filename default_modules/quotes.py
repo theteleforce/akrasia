@@ -8,12 +8,12 @@ from multiprocessing.pool import ThreadPool
 from random import choice
 
 # Asynchronous (Discord) functions
-async def add_quote(client, message, command_args, session):
-    if not message.author.permissions_in(message.channel).administrator:
+async def quote(client, message, command_args, session):
+    if not message.author.guild_permissions.administrator:
         return "You don't have permissions to run that command! (required permissions: administrator)"
 
     if message.guild is None:
-        return "Can't call !add_quote in DMs!"
+        return c.GUILD_REQUIRED_MESSAGE.format(client.command_prefix, "quote", client.command_prefix)
 
     if len(command_args) < 3:  # if the command might've been !quote [message id] or !quote [message id] #
         try:
@@ -24,12 +24,10 @@ async def add_quote(client, message, command_args, session):
                 n_messages = int(command_args[1])
 
                 if n_messages > 10:
-                    client.bot_log.info("Failed to add quote in {} (id: {}); quote was over 10 messages".format(message.guild.name,
-                                                                                                     message.guild.id))
+                    client.bot_log.info("Failed to add quote in {} (id: {}); quote was over 10 messages".format(message.guild.name, message.guild.id))
                     return "Quotes are limited at 10 messages!"
                 elif n_messages > 1:
-                    next_messages = await message.channel.history(limit=(n_messages - 1),
-                                                                  after=first_message.created_at).flatten()
+                    next_messages = await message.channel.history(limit=(n_messages - 1), after=first_message.created_at).flatten()
                     messages.extend(next_messages)
 
             quote_img = make_quote(messages, message.guild)
@@ -79,7 +77,7 @@ async def __add_quote_to_database(client, message, messages, quote_img_link, ses
             text_in_quote += m.clean_content
     user_id_string = " ".join(users_in_quote)
     try:
-        server = await get_or_init_server(client, messages[0], session)
+        server = await get_or_init_server(client, messages[0].guild, session)
         if len(server.quotes) > c.MAX_QUOTES_PER_SERVER:
             await message.channel.send(
                 "Maximum number of quotes per server exceeded ({})! To increase your maximum, please contact `SyIvan#1334` via PMs.".format(
@@ -109,10 +107,10 @@ async def __upload_quote(client, server_id, quote_img):
     return msg_with_file.attachments[0].url
 
 
-async def quote(client, message, command_args, session):
+async def get_quote(client, message, command_args, session):
     if message.guild is None:
-        return "Can't call quote from a DM!"
-    server = await get_or_init_server(client, message, session)
+        return c.GUILD_REQUIRED_MESSAGE.format(client.command_prefix, "getquote", client.command_prefix)
+    server = await get_or_init_server(client, message.guild, session)
 
     relevant_quotes, error = await __search_quotes(client, message.guild, server, command_args, only_one=True)
     if error is not None and error != c.AMBIGUOUS_ERROR: # ambiguity is fine here; we just send one of the ambiguous quotes
@@ -123,24 +121,22 @@ async def quote(client, message, command_args, session):
 
 async def delete_quote(client, message, command_args, session):
     if message.guild is None:
-        return "Can't call quote from a DM!"
-    if not message.author.permissions_in(message.channel).administrator:
+        return c.GUILD_REQUIRED_MESSAGE.format(client.command_prefix, "deletequote", client.command_prefix)
+
+    if not message.author.guild_permissions.administrator:
         return "You don't have permissions to run that command! (required permissions: administrator)"
 
-    server = await get_or_init_server(client, message, session)
+    server = await get_or_init_server(client, message.guild, session)
 
     if len(command_args) == 1 and command_args[0][
                                   :39] == "https://cdn.discordapp.com/attachments/":  # before text searching, try to remove the quote by URL
         matching_quote = session.query(Quote).filter(
             db.and_(Quote.server_id == message.guild.id, Quote.image_url == command_args[0])).first()
         if matching_quote is None:
-            client.bot_log.info("couldn't find a quote to delete in server {} (id: {}) with url {}".format(message.guild.name,
-                                                                                                message.guild.id,
-                                                                                                command_args[0]))
+            client.bot_log.info("couldn't find a quote to delete in server {} (id: {}) with url {}".format(message.guild.name, message.guild.id, command_args[0]))
             return "Couldn't find a quote at that URL!"
         else:
-            client.bot_log.info("deleted a quote in server {} (id: {}) with url {}".format(message.guild.name, message.guild.id,
-                                                                                command_args[0]))
+            client.bot_log.info("deleted a quote in server {} (id: {}) with url {}".format(message.guild.name, message.guild.id, command_args[0]))
             session.delete(matching_quote)
             return "Quote deleted!"
 
@@ -152,15 +148,16 @@ async def delete_quote(client, message, command_args, session):
         else:
             await message.channel.send(error)
     else:
-        client.bot_log.info("Successfully deleted quote with id {} from server {} (id: {})".format(relevant_quotes[0].id,
-                                                                                        message.guild.name,
-                                                                                        message.guild.id))
+        client.bot_log.info("Successfully deleted quote with id {} from server {} (id: {})".format(relevant_quotes[0].id, message.guild.name, message.guild.id))
         session.delete(relevant_quotes[0])
         return "Quote deleted!"
 
 
-async def quotes(client, message, command_args, session):
-    server = await get_or_init_server(client, message, session)
+async def get_quotes(client, message, command_args, session):
+    if message.guild is None:
+        return c.GUILD_REQUIRED_MESSAGE.format(client.command_prefix, "getquotes", client.command_prefix)
+
+    server = await get_or_init_server(client, message.guild, session)
     remaining_cooldown_time = c.QUOTES_COOLDOWN - (dt.datetime.now() - server.last_quotes_time).total_seconds()
     if remaining_cooldown_time > 0:
         return "Quotes is on cooldown (try again in {} seconds!)".format(remaining_cooldown_time)
@@ -176,19 +173,14 @@ async def quotes(client, message, command_args, session):
 async def __search_quotes(client, guild, server, command_args, only_one=False):
     if len(command_args) == 0:
         if len(server.quotes):
-            client.bot_log.info("Returning all quotes on server {} (id: {}) to parameter-less quote search".format(server.name,
-                                                                                                        server.id))
+            client.bot_log.info("Returning all quotes on server {} (id: {}) to parameter-less quote search".format(server.name, server.id))
             return server.quotes, None
         else:
-            client.bot_log.info("Couldn't list quotes for server {} (id: {}) because it doesn't have any".format(server.name,
-                                                                                                      server.id))
+            client.bot_log.info("Couldn't list quotes for server {} (id: {}) because it doesn't have any".format(server.name, server.id))
             return None, "No quotes exist on this server!"
     user_search_string = command_args[0]
     text_search_string = " ".join(command_args[1:]) if len(command_args) > 1 else None
-    client.bot_log.info("searching for quotes on server {} (id: {}) with search params (user: {}, text: {})".format(server.name,
-                                                                                                         server.id,
-                                                                                                         user_search_string,
-                                                                                                         text_search_string))
+    client.bot_log.info("searching for quotes on server {} (id: {}) with search params (user: {}, text: {})".format(server.name, server.id, user_search_string, text_search_string))
     # first, try to search for user by ID, then user by name, then user by nickname
     try:  # note that this allows searching by user ID for quotes from users who've since left the server
         relevant_quotes = [rquote for rquote in server.quotes if user_search_string in rquote.user_ids]
@@ -286,7 +278,7 @@ async def test_avatar(client, message, __, session):
         client.bot_log.info("failed to preview avatar for user {} (id: {}); no or unsupported attachment".format(message.author.name, message.author.id))
         return "Must include an attachment or embed of an image of one of these filetypes: {}\n\nNote that linking the image doesn't always work, but uploading it does.".format(c.SUPPORTED_IMAGE_FILETYPES)
 
-    user = await get_or_init_user(client, message, session)
+    user = get_or_init_user(client, message, session)
     cooldown_time_remaining = c.AVATAR_TEST_COOLDOWN - (dt.datetime.now() - user.last_test_avatar_time).total_seconds()
     if cooldown_time_remaining > 0:
         client.bot_log.info("failed to preview avatar at {} for user {} (id: {}); {} seconds left on cooldown time".format(avatar_url, message.author.name, message.author.id, cooldown_time_remaining))
@@ -350,7 +342,7 @@ def parse_quote(messages):
     last_user_to_talk = None
     last_message = None
     image_objects = []
-    image_size = [c.DEFAULT_LEFT_MARGIN + c.PFP_DIAMETER + c.PFP_TO_TEXT_MARGIN, c.BEGINNING_TOP_OFFSET - c.BETWEEN_AUTHORS_MARGIN] # when we set the first last_user_to_talk, this will make the initial vertical offset = c.BEGINNING_TOP_OFFSET
+    image_size = [c.DEFAULT_LEFT_MARGIN + c.PFP_DIAMETER + c.PFP_TO_TEXT_MARGIN, c.DEFAULT_V_MARGIN - c.BETWEEN_AUTHORS_MARGIN] # when we set the first last_user_to_talk, this will make the initial vertical offset = c.BEGINNING_TOP_OFFSET
     for message in messages:
         if len(message.attachments) > 2: # hard cap attachments and embeds at 2 so my hard drive doesn't blow up
             message.attachments = message.attachments[:2]
@@ -381,7 +373,7 @@ def parse_quote(messages):
         if message.clean_content is not None and len(message.clean_content) > 0:
             text_lines = len(wrap_text(message.clean_content, content_font, c.MAX_CONTENT_WIDTH))
             image_size[1] += text_lines * (c.MESSAGE_SIZE + c.BETWEEN_LINES_MARGIN)
-        image_size[1] += c.BETWEEN_MESSAGES_MARGIN + c.BETWEEN_LINES_MARGIN + c.TEXT_TO_IMAGE_MARGIN
+        image_size[1] += c.BETWEEN_MESSAGES_MARGIN
 
         last_message = message
 
@@ -397,9 +389,9 @@ def parse_quote(messages):
             images[image_object.message_id] = [image_object.image]
 
         image_size[0] = max(image_size[0], image_object.image.size[0])
-        image_size[1] += image_object.image.size[1]
+        image_size[1] += image_object.image.size[1] + c.BETWEEN_LINES_MARGIN
     image_size[0] += c.DEFAULT_LEFT_MARGIN + c.PFP_DIAMETER + c.PFP_TO_TEXT_MARGIN + c.DEFAULT_RIGHT_MARGIN # set this afterwards so we can do image_size[0] > c.MAX_CONTENT_WIDTH comparisons earlier
-    image_size[1] += 2 * c.DEFAULT_V_MARGIN # add both a top and bottom margin
+    image_size[1] += c.DEFAULT_V_MARGIN # add bottom margin
     return (image_size[0], image_size[1]), images, {"name": name_font, "timestamp": timestamp_font, "content": content_font}
 
 
@@ -410,7 +402,7 @@ def draw_quote(messages, image_size, images, fonts, store_avatar):
     now = dt.datetime.now() # used for timestamping messages relative to when they're quoted
     last_message = None
     last_user_to_talk = None
-    vertical_offset = c.BEGINNING_TOP_OFFSET - c.BETWEEN_AUTHORS_MARGIN # when we set the first last_user_to_talk, this will make the initial vertical offset = c.BEGINNING_TOP_OFFSET
+    vertical_offset = c.DEFAULT_V_MARGIN - c.BETWEEN_AUTHORS_MARGIN # when we set the first last_user_to_talk, this will make the initial vertical offset = c.DEFAULT_V_MARGIN
 
     for message in messages:
         if message.author != last_user_to_talk or (message.created_at - last_message.created_at).total_seconds() > c.SECONDS_FOR_SEPERATED_MESSAGES:
@@ -594,14 +586,14 @@ class DiscordImage:
 
 
 quote_module = {
-    "quote": (add_quote, "**quote** *[message identifier] [# of messages]*\n"
-                         "*quote [message identifier]*\n"
-                         "*Permissions required: administrator*\n"
-                         "    Adds a message or range of messages as a quote for this server.\n"
-                         "    Quotes can be searched using !quote or !quotes.\n"
-                         "    `!quote 699018254382923846` quotes the message with ID 699018254382923846\n"
-                         "    `!quote 699018254382923846 2` quotes the message with ID 699018254382923846, and the one right after it\n"
-                         "    `!quote body is buried at 2` quotes the last message with \"bodies are buried at\" in it, and the one right after it"),
+    "quote": (quote, "**quote** *[message identifier] [# of messages]*\n"
+                     "*quote [message identifier]*\n"
+                     "*Permissions required: administrator*\n"
+                     "    Adds a message or range of messages as a quote for this server.\n"
+                     "    Quotes can be searched using !quote or !quotes.\n"
+                     "    `!quote 699018254382923846` quotes the message with ID 699018254382923846\n"
+                     "    `!quote 699018254382923846 2` quotes the message with ID 699018254382923846, and the one right after it\n"
+                     "    `!quote body is buried at 2` quotes the last message with \"bodies are buried at\" in it, and the one right after it"),
     "deletequote": (delete_quote, "**deletequote** *[message identifier]*\n"
                                   "*deletequote [quote image link]*\n"
                                   "*Permissions required: administrator*\n"
@@ -610,18 +602,18 @@ quote_module = {
                                   "    `!removequote https://cdn.discordapp.com/attachments/698945685357199441/699133124617175070/quote.png` removes the quote stored at that link\n"
                                   "    `!removequote SyIvan body is buried at` removes the quote that has the string \"bodiy are buried at\" and the user SyIvan in it"
                                   "    `!removequote body is buried at` removes the quote with the string \"bodiy are buried at\""),
-    "getquote": (quote, "**getquote** *[message identifier]*\n"
-                        "*Permissions required: none*\n"
-                        "    Retrieves a random quote from this server that matches the message identifier.\n"
-                        "    `!getquote` retrieves a random quote from this server\n"
-                        "    `!getquote SyIvan` retrieves a random quote with the user SyIvan from this server\n"
-                        "    `!getquote SyIvan body is buried at` retrieves a random quote with the user SyIvan and the string \"body is buried at\" from this server."),
-    "getquotes": (quotes, "**getquotes** *[message identifier]*\n"
-                          "*Permissions required: none*\n"
-                         "    Retrieves all quote from this server that match the message identifier.\n"
-                         "    `!getquotes` retrieves all quotes from this server\n"
-                         "    `!getquotes SyIvan` retrieves all quotes with the user SyIvan from this server\n"
-                         "    `!getquotes SyIvan body is buried at` retrieves all quotes with the user SyIvan and the string \"body is buried at\" from this server."),
+    "getquote": (get_quote, "**getquote** *[message identifier]*\n"
+                            "*Permissions required: none*\n"
+                            "    Retrieves a random quote from this server that matches the message identifier.\n"
+                            "    `!getquote` retrieves a random quote from this server\n"
+                            "    `!getquote SyIvan` retrieves a random quote with the user SyIvan from this server\n"
+                            "    `!getquote SyIvan body is buried at` retrieves a random quote with the user SyIvan and the string \"body is buried at\" from this server."),
+    "getquotes": (get_quotes, "**getquotes** *[message identifier]*\n"
+                              "*Permissions required: none*\n"
+                              "    Retrieves all quote from this server that match the message identifier.\n"
+                              "    `!getquotes` retrieves all quotes from this server\n"
+                              "    `!getquotes SyIvan` retrieves all quotes with the user SyIvan from this server\n"
+                              "    `!getquotes SyIvan body is buried at` retrieves all quotes with the user SyIvan and the string \"body is buried at\" from this server."),
     "testavatar": (test_avatar, "**testavatar** *[avatar link or file]*\n"
                                 "*Permissions required: none*\n"
                                 "    Shows an image of the user saying something with the linked image as their avatar.\n"

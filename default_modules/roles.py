@@ -1,12 +1,13 @@
+import constants as c
 import sqlalchemy as db
 
 from database_utils import Role, get_or_init_server
 
 async def add_role(client, message, command_args, session):
     if message.guild is None:
-        return "Can't call addrole in a DM!"
+        return c.GUILD_REQUIRED_MESSAGE.format(client.command_prefix, "addrole", client.command_prefix)
 
-    if not message.author.permissions_in(message.channel).manage_roles:
+    if not message.author.guild_permissions.manage_roles:
         client.bot_log.warning("User {} (id: {}) called !addrole {} without manage role permissions on server {} (id: {})!".format(
             message.author.name, message.author.id, command_args, message.guild.name, message.guild.id))
         return "You don't have permissions to edit roles!"
@@ -31,7 +32,7 @@ async def add_role(client, message, command_args, session):
         client.bot_log.warning("Failed to add role {} (id: {}) to server {} (id: {}); error was {}".format(server_roles[0].name, server_roles[0].id, message.guild.name, message.guild.id, e))
         return "Couldn't add that role (do I need permissions?)"
 
-    server = await get_or_init_server(client, message, session)
+    server = await get_or_init_server(client, message.guild, session)
     session.add(Role(id=new_role.id, name=role_name.lower(), server=server))
     client.bot_log.info("Added role {} (id: {}) to sever {} (id: {})".format(new_role.name, new_role.id, message.guild.name, message.guild.id))
     return "Added role `{}`!".format(role_name)
@@ -39,9 +40,9 @@ async def add_role(client, message, command_args, session):
 
 async def delete_role(client, message, command_args, session):
     if message.guild is None:
-        return "Can't call deleterole in a DM!"
+        return c.GUILD_REQUIRED_MESSAGE.format(client.command_prefix, "deleterole", client.command_prefix)
 
-    if not message.author.permissions_in(message.channel).manage_roles:
+    if not message.author.guild_permissions.manage_roles:
         client.bot_log.warning("User {} (id: {}) called !deleterole {} without manage role permissions on server {} (id: {})!".format(message.author.name, message.author.id, command_args, message.guild.name, message.guild.id))
         return "You don't have permissions to edit roles!"
 
@@ -74,9 +75,9 @@ async def delete_role(client, message, command_args, session):
 
 async def unlist_role(client, message, command_args, session):
     if message.guild is None:
-        return "Can't call unlistrole in a DM!"
+        return c.GUILD_REQUIRED_MESSAGE.format(client.command_prefix, "unlistrole", client.command_prefix)
 
-    if not message.author.permissions_in(message.channel).manage_roles:
+    if not message.author.guild_permissions.manage_roles:
         client.bot_log.warning("User {} (id: {}) called !unlistrole {} without manage role permissions on server {} (id: {})!".format(message.author.name, message.author.id, command_args, message.guild.name, message.guild.id))
         return "You don't have permissions to edit roles!"
 
@@ -95,7 +96,7 @@ async def unlist_role(client, message, command_args, session):
 
 async def leave_role(client, message, command_args, __):
     if message.guild is None:
-        return "Can't call leaverole in a DM!"
+        return c.GUILD_REQUIRED_MESSAGE.format(client.command_prefix, "leave", client.command_prefix)
 
     if command_args is None:
         return "No role given!"
@@ -121,7 +122,7 @@ async def leave_role(client, message, command_args, __):
 
 async def join_role(client, message, command_args, session):
     if message.guild is None:
-        return "Can't call addrole in a DM!"
+        return c.GUILD_REQUIRED_MESSAGE.format(client.command_prefix, "join", client.command_prefix)
 
     if command_args is None:
         return "No role given!"
@@ -152,7 +153,7 @@ async def join_role(client, message, command_args, session):
 
 async def list_role(client, message, command_args, session):
     if message.guild is None:
-        return "Can't call listrole in a DM!"
+        return c.GUILD_REQUIRED_MESSAGE.format(client.command_prefix, "listrole", client.command_prefix)
 
     if command_args is None:
         return "No role given!"
