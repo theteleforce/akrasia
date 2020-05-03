@@ -32,7 +32,7 @@ async def add_role(client, message, command_args, session):
         client.bot_log.warning("Failed to add role {} (id: {}) to server {} (id: {}); error was {}".format(server_roles[0].name, server_roles[0].id, message.guild.name, message.guild.id, e))
         return "Couldn't add that role (do I need permissions?)"
 
-    server = await get_or_init_server(client, message.guild, session)
+    server = get_or_init_server(client, message.guild, session)
     session.add(Role(id=new_role.id, name=role_name.lower(), server=server))
     client.bot_log.info("Added role {} (id: {}) to sever {} (id: {})".format(new_role.name, new_role.id, message.guild.name, message.guild.id))
     return "Added role `{}`!".format(role_name)

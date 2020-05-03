@@ -105,7 +105,7 @@ async def setup(message, _, session, log, doesnt_exist=False):
     return "Setup successful!"
 
 
-async def get_or_init_server(client, guild, session):
+def get_or_init_server(client, guild, session):
     server = session.query(Server).filter(Server.id == guild.id).first()
     if server is None:
         try:

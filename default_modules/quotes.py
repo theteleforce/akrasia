@@ -77,7 +77,7 @@ async def __add_quote_to_database(client, message, messages, quote_img_link, ses
             text_in_quote += m.clean_content
     user_id_string = " ".join(users_in_quote)
     try:
-        server = await get_or_init_server(client, messages[0].guild, session)
+        server = get_or_init_server(client, messages[0].guild, session)
         if len(server.quotes) > c.MAX_QUOTES_PER_SERVER:
             await message.channel.send(
                 "Maximum number of quotes per server exceeded ({})! To increase your maximum, please contact `SyIvan#1334` via PMs.".format(
@@ -110,7 +110,7 @@ async def __upload_quote(client, server_id, quote_img):
 async def get_quote(client, message, command_args, session):
     if message.guild is None:
         return c.GUILD_REQUIRED_MESSAGE.format(client.command_prefix, "getquote", client.command_prefix)
-    server = await get_or_init_server(client, message.guild, session)
+    server = get_or_init_server(client, message.guild, session)
 
     relevant_quotes, error = await __search_quotes(client, message.guild, server, command_args, only_one=True)
     if error is not None and error != c.AMBIGUOUS_ERROR: # ambiguity is fine here; we just send one of the ambiguous quotes
@@ -126,7 +126,7 @@ async def delete_quote(client, message, command_args, session):
     if not message.author.guild_permissions.administrator:
         return "You don't have permissions to run that command! (required permissions: administrator)"
 
-    server = await get_or_init_server(client, message.guild, session)
+    server = get_or_init_server(client, message.guild, session)
 
     if len(command_args) == 1 and command_args[0][
                                   :39] == "https://cdn.discordapp.com/attachments/":  # before text searching, try to remove the quote by URL
@@ -156,7 +156,7 @@ async def get_quotes(client, message, command_args, session):
     if message.guild is None:
         return c.GUILD_REQUIRED_MESSAGE.format(client.command_prefix, "getquotes", client.command_prefix)
 
-    server = await get_or_init_server(client, message.guild, session)
+    server = get_or_init_server(client, message.guild, session)
     remaining_cooldown_time = c.QUOTES_COOLDOWN - (dt.datetime.now() - server.last_quotes_time).total_seconds()
     if remaining_cooldown_time > 0:
         return "Quotes is on cooldown (try again in {} seconds!)".format(remaining_cooldown_time)

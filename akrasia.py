@@ -291,7 +291,7 @@ class Akrasia(discord.Client):
         except Exception as e:
             raise Exception("Couldn't check if alias {} already existed: {}".format(alias, e))
 
-        alias_server = await get_or_init_server(self, message.guild, session)
+        alias_server = get_or_init_server(self, message.guild, session)
         if len(alias_server.aliases) > c.MAX_ALIASES_PER_SERVER:
             self.bot_log.error("Couldn't add alias to server {} (id: {}) because it had exceeded max aliases".format(message.guild.name, message.guild.id))
             return "Too many aliases on this server ({}). You should delete some with {}deletealias".format(c.MAX_ALIASES_PER_SERVER, self.command_prefix)
@@ -362,7 +362,7 @@ class Akrasia(discord.Client):
                 supposed_id = int(server_name_or_id)
                 server_matching_id = self.get_guild(supposed_id)
                 if server_matching_id is not None:
-                    main_server = await get_or_init_server(self, server_matching_id, session)
+                    main_server = get_or_init_server(self, server_matching_id, session)
                     user = get_or_init_user(self, message, session)
                     user.main_server = main_server
                     self.bot_log.info("Set main server of {} (id: {}) to {} (id: {})".format(message.author.name, message.author.id, main_server.name, main_server.id))
@@ -384,7 +384,7 @@ class Akrasia(discord.Client):
             return "No servers found matching that search term!"
 
         server_matching_id = self.get_guild(servers_matching_search[0].id)
-        main_server = await get_or_init_server(self, server_matching_id, session)
+        main_server = get_or_init_server(self, server_matching_id, session)
         user = get_or_init_user(self, message, session)
         user.main_server = main_server
         self.bot_log.info("Set main server of {} (id: {}) to {} (id: {})".format(message.author.name, message.author.id, main_server.name, main_server.id))
