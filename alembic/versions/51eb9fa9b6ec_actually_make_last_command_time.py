@@ -1,4 +1,4 @@
-"""actually make last_command_time
+"""exists for historical (read: stupid) reasons
 
 Revision ID: 51eb9fa9b6ec
 Revises: 16762e72af61
@@ -17,10 +17,8 @@ depends_on = None
 
 
 def upgrade():
-    with op.batch_alter_table("users") as batch_op:
-        batch_op.add_column(sa.Column("last_command_time", sa.DateTime))
+    pass
 
 
 def downgrade():
-    with op.batch_alter_table("users") as batch_op:
-        batch_op.drop_column("last_command_time")
+    pass
