@@ -200,7 +200,7 @@ class Akrasia(discord.Client):
                 self.bot_log.warning("User {} (id: {}) triggered another hook before their hook cooldown was up".format(message.author.name, message.author.id))
                 return None
             else:
-                relevant_user.last_command_time = message.created_at
+                relevant_user.last_hook_time = message.created_at
                 session.commit()  # commit here so people can't spam invalid commands and abuse the except: rollback
 
             hook_function = self.hooks_dict[hook]
