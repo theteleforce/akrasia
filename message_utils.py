@@ -2,7 +2,7 @@ import constants as c
 import pytz
 
 from asyncio import sleep
-from discord import Message
+from discord import Member, Message, User
 
 class MessageWrapper(Message):
     def __init__(self, message, guild, author):
@@ -18,6 +18,10 @@ class MessageWrapper(Message):
 
 
 async def send_lines(recipient, lines, code_mode=False):
+    if type(recipient) is User or type(recipient) is Member:
+        if recipient.bot: # can't DM bots
+            return
+
     if code_mode:
         send_string = "```"
     else:

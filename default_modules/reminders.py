@@ -11,6 +11,9 @@ from default_modules.quotes import get_time_text
 
 # Asynchronous (Discord) stuff
 async def remind_me(client, message, command_args, session):
+    if message.author.bot:
+        return "Robots can't receive reminders!"
+
     if len(command_args) < 2:
         return "Must include a time (8 seconds, 16 hours, 04/17/2020, etc) and a message!"
 
