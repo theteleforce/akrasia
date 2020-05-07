@@ -35,7 +35,7 @@ async def send_lines(recipient, lines, code_mode=False):
 
         max_chars = c.MAX_CHARS_PER_MESSAGE
         if code_mode:
-            max_chars += 3 # make room for the ending ```
+            max_chars -= 3 # make room for the ending ```
 
         if len(send_string) + len(new_line) > max_chars:
             if code_mode:
