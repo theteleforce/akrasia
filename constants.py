@@ -151,6 +151,10 @@ MAX_QUOTES_PER_SERVER = 500
 MAX_REVERSE_SEARCH_MESSAGES = 250
 TIMEZONE = pytz.timezone("US/Eastern")
 TEXT_TO_IMAGE_MARGIN = 4
+REACTION_IMG_SIZE = (16, 16)
+REACTION_TEXT_SIZE = 14
+REACTION_MIN_WIDTH = 43
+REACTION_WIDTH_WITHOUT_NUMBER = 36
 AVATAR_TEST_MESSAGES = [
     "I have come here to chew bubblegum and kick ass.\nAnd I'm all out of bubblegum.",
     "I have come here to chew bubblegum and kick ass.\nAnd I'm all out of ass.",

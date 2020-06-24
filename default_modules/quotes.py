@@ -508,9 +508,13 @@ def wrap_text(text, font, max_width):
 
     current_line = ""
     for word in words:
+
         extended = current_line + " " + word if len(current_line) else word
         if font.getsize(extended)[0] > max_width or len(word) == 0 or word[-1] == "\n": # len(word) == 0 checks for consecutive newlines leaving an empty string in the words list
-            lines.append(current_line)
+            if current_line == "":
+                lines.append(" ") # space makes sure the line has normal height, and is drawn properly as an empty line
+            else:
+                lines.append(current_line)
 
             if font.getsize(word)[0] > max_width: # single words that are over the length limit are wrapped on a character-by-character basis
                 word_lines = wrap_word(word, font, max_width)

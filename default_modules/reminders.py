@@ -35,7 +35,7 @@ async def remind_me(client, message, command_args, session):
             client.bot_log.error("Couldn't set reminder for user {} (id: {}) to fire on {}; user exceeded max reminders\nreminder was:{}".format(message.author.name, message.author.id, remind_at, remind_message))
             return "You're at the maximum number of reminders ({}). Hopefully they aren't too long away!".format(
                 c.MAX_REMINDERS_PER_USER)
-        session.add(Reminder(message=remind_message, send_at=remind_at, user_id=message.author.id, failures=0))
+        session.add(Reminder(message=remind_message, send_at=remind_at, sent_at=message.created_at, user_id=message.author.id, failures=0))
         if n_time_arguments == 1:
             return_message = "Reminder set for {}!".format(command_args[0])
         else:
@@ -154,7 +154,13 @@ async def start_remind_loop(client):
 async def remind_user(client, reminder):
     client.bot_log.info("Attempting to remind user with ID {} with message: {}".format(reminder.user_id, reminder.message))
     try:
-        reminder_text = get_time_text(reminder.send_at, dt.now())
+        try:
+            if reminder.send_at is None:
+                raise Exception
+            reminder_text = get_time_text(reminder.sent_at, dt.now())
+        except:
+            reminder_text = "Ugh... when did you send this again?"
+
         await client.get_user(reminder.user_id).send("{}\n(in response to your reminder set {}{})".format(reminder.message, reminder_text[0:1].lower(), reminder_text[1:]))
         client.bot_log.info("Successfully reminded user with ID {} with message: {}".format(reminder.user_id, reminder.message))
         return reminder, True

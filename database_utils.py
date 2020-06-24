@@ -40,6 +40,7 @@ class Reminder(BaseTable):
     id = Column(Integer, primary_key=True)
     message = Column(String)
     send_at = Column(DateTime)
+    sent_at = Column(DateTime)
     user_id = Column(Integer, index=True)
     failures = Column(Integer)
 

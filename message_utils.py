@@ -53,7 +53,7 @@ async def send_lines(recipient, lines, code_mode=False):
 
 
 def get_time_text(datetime, now):
-    offset_aware_now = c.TIMEZONE.localize(now)
+    offset_aware_now = pytz.utc.localize(now).astimezone(c.TIMEZONE)
     message_datetime = pytz.utc.localize(datetime).astimezone(c.TIMEZONE)
     datestring = ""
     day_offset = int((offset_aware_now - message_datetime).total_seconds() / 86400) # int division with discarding, so 1.1 days => yesterday, 0.9 days => today
