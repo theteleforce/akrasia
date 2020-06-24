@@ -63,7 +63,7 @@ class Akrasia(discord.Client):
                         self.bot_log.warning("Failed to add hook {} because a hook with that regex already existed!")
 
     def run(self):
-        with open("actual_config_shhh.json") as f:
+        with open("config.json") as f:
             config = load(f)
             c.HOME_SERVER_ID = config["home_server"]
             c.AUTHOR_ID = config["author_id"]
