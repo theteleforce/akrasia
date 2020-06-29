@@ -42,7 +42,7 @@ async def remind_me(client, message, command_args, session):
         if n_time_arguments == 1:
             return_message = "Reminder set for {}!".format(command_args[0])
         else:
-            return_message = "Reminder set for {} from now!".format(" ".join(command_args[:2]))
+            return_message = "Reminder set for {} from now!".format(" ".join(command_args[:n_time_arguments]))
         client.bot_log.info("Set reminder for user {} (id: {}) to fire on {}; text: {}".format(message.author.name, message.author.id, remind_at, remind_message))
     except Exception as e:
         client.bot_log.error("Couldn't set reminder for user {} (id: {}) to fire on {}; error was {}\nreminder was:{}".format(message.author.name, message.author.id, remind_at, e, remind_message))
@@ -191,7 +191,54 @@ def parse_time(message_args):
         if len(message_args) < 2:
             raise ValueError("Invalid time (allowed formats: seconds, minutes, hours, days, weeks, months, years, or dates in format mm/dd/yyyy")
         else:
-            time_unit = message_args[1].lower()
+            remind_at = now
+            relevant_argument = 0
+            while relevant_argument < len(message_args):
+                if message_args[relevant_argument].lower() == "and": # treat "15 hours and 36 minutes" the same as "15 hours 36 minutes"
+                    relevant_argument += 1
+                    continue
+
+                try:
+                    time_quantity = int(message_args[relevant_argument])
+                except ValueError:
+                    if relevant_argument < 2: # if we don't have a valid time yet, throw an error...
+                        raise ValueError("Invalid time (allowed formats: seconds, minutes, hours, days, weeks, months, years, or dates in format mm/dd/yyyy")
+                    else: # otherwise, treat this as the first word of the reminder's message
+                        break
+                except IndexError:
+                    raise ValueError("No reminder message found!")
+
+                try:
+                    time_unit = message_args[relevant_argument + 1].lower()
+                except IndexError: # if there's no argument after this number, assume it's meant to be the reminder text (e.g. !remindme 10 days 42)
+                    break
+
+                if time_quantity < 1:
+                    raise ValueError("Sorry, my time machine's still on the fritz.")
+                if time_unit in c.SECONDS_ALIAS:
+                    remind_at += relativedelta(seconds=time_quantity)
+                elif time_unit in c.MINUTES_ALIAS:
+                    remind_at += relativedelta(minutes=time_quantity)
+                elif time_unit in c.HOURS_ALIAS:
+                    remind_at += relativedelta(hours=time_quantity)
+                elif time_unit in c.DAYS_ALIAS:
+                    remind_at += relativedelta(days=time_quantity)
+                elif time_unit in c.WEEKS_ALIAS:
+                    remind_at += relativedelta(weeks=time_quantity)
+                elif time_unit in c.MONTHS_ALIAS:
+                    remind_at += relativedelta(months=time_quantity)
+                elif time_unit in c.YEARS_ALIAS:
+                    remind_at += relativedelta(years=time_quantity)
+                else: # if it's nothing, assume this is all part of the time text (e.g. !remindme 10 days 42 monkeys)
+                    break
+
+                relevant_argument += 2
+
+            if relevant_argument <= len(message_args):
+                raise ValueError("No remind message found!")
+            return remind_at, relevant_argument
+
+            """time_unit = message_args[1].lower()
             time_quantity = int(message_args[0])
             if time_quantity < 1:
                 raise ValueError("Sorry, my time machine's still on the fritz.")
@@ -209,7 +256,7 @@ def parse_time(message_args):
                 return now + relativedelta(months=int(message_args[0])), 2
             elif time_unit in c.YEARS_ALIAS:
                 return now + relativedelta(years=int(message_args[0])), 2
-            raise ValueError("Invalid time type passed: {}".format(time_unit))
+            raise ValueError("Invalid time type passed: {}".format(time_unit))"""
 
 
 async def async_sleep_n_seconds(n, loop_start_time):
