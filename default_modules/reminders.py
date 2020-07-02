@@ -234,7 +234,7 @@ def parse_time(message_args):
 
                 relevant_argument += 2
 
-            if relevant_argument <= len(message_args):
+            if relevant_argument > len(message_args):
                 raise ValueError("No remind message found!")
             return remind_at, relevant_argument
 
