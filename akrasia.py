@@ -153,7 +153,8 @@ class Akrasia(discord.Client):
             command_reply = await command_function(self, message, command_args, session)
             if command_reply:
                 if len(command_reply) > 2000: # send replies that would have had to be split into multiple messages in DMs
-                    await message.channel.send("Check your DMs!")
+                    if not isinstance(message.channel, discord.DMChannel):
+                        await message.channel.send("Check your DMs!")
                     await send_lines(message.author, command_reply.split("\n"))
                 else:
                     await message.channel.send(command_reply)

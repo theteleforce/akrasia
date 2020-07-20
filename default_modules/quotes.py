@@ -1,9 +1,9 @@
 import sqlalchemy as db
 
 from database_utils import Quote, get_or_init_server, get_or_init_user
-from discord import File
+from discord import DMChannel, File
 from discord.errors import HTTPException
-from message_utils import send_lines, get_time_text
+from message_utils import get_time_text
 from multiprocessing.pool import ThreadPool
 from random import choice
 
@@ -180,7 +180,8 @@ async def get_quotes(client, message, command_args, session):
             quotes_in_current_message += 1
         if len(ret) > 3: # if more than 15 quotes have to be sent, send them in DMs
             client.bot_log.info("Returning {} quotes to user {} (id: {}) in DMs".format(len(relevant_quotes), message.author.name, message.author.id))
-            await message.channel.send("Check your DMs!")
+            if not isinstance(message.channel, DMChannel):
+                await message.channel.send("Check your DMs!")
             for ret_message in ret:
                 await message.author.send(ret_message)
         else: # otherwise, just reply in the channel like normal
