@@ -166,7 +166,27 @@ async def get_quotes(client, message, command_args, session):
         await message.channel.send(error)
     else:
         server.last_quotes_time = dt.datetime.now()
-        return "\n".join([rquote.image_url for rquote in relevant_quotes])
+
+        # Since Discord can only preview five links per message, we send the quote image links in groups of 5
+        ret = []
+        current_message = ""
+        quotes_in_current_message = 0
+        for rquote in relevant_quotes:
+            if quotes_in_current_message == 5:
+                ret.append(current_message)
+                quotes_in_current_message = 0
+                current_message = ""
+            current_message += "{}\n".format(rquote.image_url)
+            quotes_in_current_message += 1
+        if len(ret) > 3: # if more than 15 quotes have to be sent, send them in DMs
+            client.bot_log.info("Returning {} quotes to user {} (id: {}) in DMs".format(len(relevant_quotes), message.author.name, message.author.id))
+            await message.channel.send("Check your DMs!")
+            for ret_message in ret:
+                await message.author.send(ret_message)
+        else: # otherwise, just reply in the channel like normal
+            client.bot_log.info("Returning {} quotes to user {} (id: {}) in the request channel".format(len(relevant_quotes), message.author.name, message.author.id))
+            for ret_message in ret:
+                await message.channel.send(ret_message)
 
 
 async def __search_quotes(client, guild, server, command_args, only_one=False):
