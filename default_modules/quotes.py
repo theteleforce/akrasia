@@ -178,6 +178,8 @@ async def get_quotes(client, message, command_args, session):
                 current_message = ""
             current_message += "{}\n".format(rquote.image_url)
             quotes_in_current_message += 1
+        ret.append(current_message) # this will never be empty, since current_message is appended to at the end of each loop & __search_quotes returns an error if nothing is found
+        
         if len(ret) > 3: # if more than 15 quotes have to be sent, send them in DMs
             client.bot_log.info("Returning {} quotes to user {} (id: {}) in DMs".format(len(relevant_quotes), message.author.name, message.author.id))
             if not isinstance(message.channel, DMChannel):
