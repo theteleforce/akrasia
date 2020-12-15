@@ -6,6 +6,7 @@ import sqlalchemy as db
 
 from asyncio import ensure_future, get_event_loop
 from database_utils import Alias, AuditLogEntry, init_databases, get_or_init_server, get_or_init_user
+from discord import Intents
 from json import load
 from logger import Logger
 from message_utils import MessageWrapper, send_lines
@@ -20,7 +21,7 @@ class Akrasia(discord.Client):
         logging.basicConfig(level=logging.INFO, format="[%(asctime)s] [%(levelname)s] %(message)s", stream=stdout)
         self.bot_log = logging.getLogger(__name__)  # use a logger unique to akrasia
 
-        super().__init__()
+        super().__init__(intents=Intents.all())
         self.db_engine, self.db_session_builder = self.init_db_connection()
         self.event_loop = get_event_loop()
         self.version = "0.2.0"
