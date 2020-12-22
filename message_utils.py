@@ -29,7 +29,7 @@ async def send_lines(recipient, lines, code_mode=False):
 
     for line in lines:
         if len(line) > c.TRUNCATED_MESSAGE_LENGTH:
-            new_line = line[:c.TRUNCATED_MESSAGE_LENGTH] + "[truncated]"
+            new_line = line[:c.TRUNCATED_MESSAGE_LENGTH] + c.MESSAGE_TRUNCATOR
         else:
             new_line = line
 
