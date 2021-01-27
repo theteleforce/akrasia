@@ -15,7 +15,8 @@ if __name__ == "__main__":
     ensure_directories()
     update_database()
 
+    custom_background_loops = []
     custom_hooks = []
     custom_modules = []
-    bot = Akrasia(modules=DEFAULT_MODULES + custom_modules, background_loops=DEFAULT_BACKGROUND_LOOPS, hooks=[default_hooks] + custom_hooks)
+    bot = Akrasia(modules=DEFAULT_MODULES + custom_modules, background_loops=DEFAULT_BACKGROUND_LOOPS + custom_background_loops, hooks=[default_hooks] + custom_hooks)
     bot.run()
