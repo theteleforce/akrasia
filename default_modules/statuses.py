@@ -2,6 +2,7 @@ from asyncio import sleep
 from discord import Game
 from random import choice
 
+
 async def status_loop(client):
     while True:
         if client.ws is None: # don't throw errors while the client is still starting up

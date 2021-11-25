@@ -5,6 +5,7 @@ from constants import DEFAULT_BACKGROUND_LOOPS, DEFAULT_MODULES, DIRECTORIES
 from database_utils import update_database
 from hooks import default_hooks
 
+
 def ensure_directories():
     for directory in DIRECTORIES:
         if not os.path.exists(directory):

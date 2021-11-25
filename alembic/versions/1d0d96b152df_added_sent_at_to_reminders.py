@@ -17,10 +17,12 @@ depends_on = None
 
 
 def upgrade():
-    with op.batch_alter_table("reminders") as batch_op:
-        batch_op.add_column(sa.Column("sent_at", sa.DateTime))
+    # with op.batch_alter_table("reminders") as batch_op:
+    #     batch_op.add_column(sa.Column("sent_at", sa.DateTime))
+    pass
 
 
 def downgrade():
-    with op.batch_alter_table("reminders") as batch_op:
-        batch_op.drop_column("sent_at")
+    # with op.batch_alter_table("reminders") as batch_op:
+    #     batch_op.drop_column("sent_at")
+    pass

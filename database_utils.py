@@ -4,7 +4,9 @@ import datetime as dt
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from sqlalchemy_utils.functions import database_exists
 BaseTable = declarative_base()
+
 
 class Server(BaseTable):
     __tablename__ = "servers"
@@ -34,6 +36,7 @@ class User(BaseTable):
     last_hook_time = Column(DateTime)
     last_test_avatar_time = Column(DateTime)
 
+
 class Reminder(BaseTable):
     __tablename__ = "reminders"
 
@@ -44,6 +47,7 @@ class Reminder(BaseTable):
     user_id = Column(Integer, index=True)
     failures = Column(Integer)
 
+
 class Alias(BaseTable):
     __tablename__ = "aliases"
 
@@ -53,6 +57,7 @@ class Alias(BaseTable):
     server_id = Column(Integer, ForeignKey("servers.id"))
     server = relationship("Server", back_populates="aliases")
 
+
 class Quote(BaseTable):
     __tablename__ = "quotes"
 
@@ -61,6 +66,7 @@ class Quote(BaseTable):
     user_ids = Column(String, index=True)
     text = Column(String(length=1000), index=True)
     server = relationship("Server", back_populates="quotes")
+
 
 class AuditLogEntry(BaseTable):
     __tablename__ = "auditlog"
@@ -72,12 +78,14 @@ class AuditLogEntry(BaseTable):
     message_content = Column(String(length=1000), index=True)
     timestamp = Column(DateTime, index=True)
 
+
 def init_databases(engine):
     Server.roles = relationship("Role", order_by=Role.id, back_populates="server")
     Server.users_with_main_server = relationship("User", order_by=User.id, back_populates="main_server")
     Server.aliases = relationship("Alias", order_by=Alias.id, back_populates="server")
     Server.quotes = relationship("Quote", back_populates="server")
     User.audit_log_entries = relationship(AuditLogEntry, back_populates="user")
+
     BaseTable.metadata.create_all(engine)
 
 
@@ -138,4 +146,5 @@ def update_database():
     import alembic.config
     from os import getcwd
     db_path = "sqlite:///{}/{}/{}".format(getcwd(), c.DATABASE_DIR, c.MAIN_DATABASE_NAME)
-    alembic.config.main(argv=["-x", "dbUri={}".format(db_path), "upgrade", "head"])
+    if database_exists(db_path):
+        alembic.config.main(argv=["-x", "dbUri={}".format(db_path), "upgrade", "head"])

@@ -5,7 +5,7 @@ import os
 import sqlalchemy as db
 
 from asyncio import ensure_future, get_event_loop
-from database_utils import Alias, AuditLogEntry, init_databases, get_or_init_server, get_or_init_user
+from database_utils import Alias, AuditLogEntry, init_databases, get_or_init_server, get_or_init_user, update_database
 from discord import Intents
 from json import load
 from logger import Logger
@@ -14,6 +14,8 @@ from re import match
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql.expression import func
 from sys import stdout
+
+from reactions import BasicReactionEvent, ReactionEvent
 
 
 class Akrasia(discord.Client):
@@ -42,9 +44,11 @@ class Akrasia(discord.Client):
             "deletealias": self.delete_alias, # tested
             "echo": self.echo, # tested
             "help": self.help,
-            "setserver": self.set_server # tested
+            "setserver": self.set_server, # tested,
+            "debug": self.debug
         }
         self.hooks_dict = {}
+        self.reaction_events = {}
 
         if modules is not None:
             for module in modules:
@@ -93,6 +97,7 @@ class Akrasia(discord.Client):
             self.bot_log.info("Connected to existing database at {}".format(database_uri))
         else:
             self.bot_log.info("Created new database at {}".format(database_uri))
+            update_database()
 
         session_builder = sessionmaker(bind=engine) # create the tool we'll use to make sessions in the future
         return engine, session_builder
@@ -115,6 +120,25 @@ class Akrasia(discord.Client):
                 if match(hook, clean_content):
                     await self.handle_hook(message, hook)
                     return # don't let the bot spam if someone sends a message with 60 triggers
+
+    async def on_reaction_add(self, reaction, user):
+        if user == self.user: # avoid feedback loops
+            return False
+
+        if reaction.message in self.reaction_events:
+            reaction_event = self.reaction_events[reaction.message]
+
+            if reaction_event.universal or user.id in reaction_event.allowed_responses:
+                reaction_emoji_name = reaction.emoji.name if reaction.emoji is discord.Emoji else reaction.emoji
+                if reaction_emoji_name in reaction_event.responses:
+                    reaction_event.uses -= 1
+                    if reaction_event.uses == 0:
+                        self.bot_log.info("reaction event on message {} is out of uses; removing...".format(reaction.message.id))
+                        self.reaction_events.pop(reaction.message)
+
+                self.bot_log.info("triggering reaction event: (reaction: {}, remaining uses: {} message: {}, user: {}, guild: {})".format(reaction_emoji_name, reaction_event.uses, reaction.message.id, user.id, reaction.message.guild.id if reaction.message.guild else None))
+                await reaction.message.remove_reaction(reaction.emoji, user)
+                await reaction_event.responses[reaction_emoji_name](user, reaction_event.message.channel, reaction_emoji_name)
 
     async def handle_command(self, message):
         command_content = message.content[c.PREFIX_LENGTH:].split(" ") # cut off the prefix
@@ -440,7 +464,6 @@ class Akrasia(discord.Client):
 
         self.bot_log.info("sent audit log to user {} (id: {}) based on (num_entries: {}, search_term: {})".format(message.author.name, message.author.id, num_entries, search_term))
         return "\n".join(return_lines)
-
 
     async def help(self, _, message, command_args, session):
         if len(command_args) == 0:

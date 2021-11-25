@@ -17,10 +17,12 @@ depends_on = None
 
 
 def upgrade():
-    with op.batch_alter_table("users") as batch_op:
-        batch_op.add_column(sa.Column("last_hook_time", sa.DateTime))
+    # with op.batch_alter_table("users") as batch_op:
+    #     batch_op.add_column(sa.Column("last_hook_time", sa.DateTime))
+    pass
 
 
 def downgrade():
-    with op.batch_alter_table("users") as batch_op:
-        batch_op.drop_column("last_hook_time")
+    # with op.batch_alter_table("users") as batch_op:
+    #     batch_op.drop_column("last_hook_time")
+    pass

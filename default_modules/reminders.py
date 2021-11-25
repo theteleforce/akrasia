@@ -238,26 +238,6 @@ def parse_time(message_args):
                 raise ValueError("No remind message found!")
             return remind_at, relevant_argument
 
-            """time_unit = message_args[1].lower()
-            time_quantity = int(message_args[0])
-            if time_quantity < 1:
-                raise ValueError("Sorry, my time machine's still on the fritz.")
-            if time_unit in c.SECONDS_ALIAS:
-                return now + relativedelta(seconds=int(message_args[0])), 2
-            elif time_unit in c.MINUTES_ALIAS:
-                return now + relativedelta(minutes=int(message_args[0])), 2
-            elif time_unit in c.HOURS_ALIAS:
-                return now + relativedelta(hours=int(message_args[0])), 2
-            elif time_unit in c.DAYS_ALIAS:
-                return now + relativedelta(days=int(message_args[0])), 2
-            elif time_unit in c.WEEKS_ALIAS:
-                return now + relativedelta(weeks=int(message_args[0])), 2
-            elif time_unit in c.MONTHS_ALIAS:
-                return now + relativedelta(months=int(message_args[0])), 2
-            elif time_unit in c.YEARS_ALIAS:
-                return now + relativedelta(years=int(message_args[0])), 2
-            raise ValueError("Invalid time type passed: {}".format(time_unit))"""
-
 
 async def async_sleep_n_seconds(n, loop_start_time):
     time_elapsed = dt.now() - loop_start_time
