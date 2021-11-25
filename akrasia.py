@@ -44,8 +44,7 @@ class Akrasia(discord.Client):
             "deletealias": self.delete_alias, # tested
             "echo": self.echo, # tested
             "help": self.help,
-            "setserver": self.set_server, # tested,
-            "debug": self.debug
+            "setserver": self.set_server # tested,
         }
         self.hooks_dict = {}
         self.reaction_events = {}
